@@ -21,6 +21,7 @@ interface AdminUser extends User {
 
 export function ClientSelect({ value, onChange }: ClientSelectProps) {
   const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -29,6 +30,8 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
 
   const fetchClients = async () => {
     try {
+      setLoading(true);
+      
       // Get all users with 'client' role from profiles
       const { data: clientProfiles, error: profilesError } = await supabase
         .from('profiles')
@@ -44,11 +47,14 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
         return;
       }
 
-      // Get the corresponding user details from auth
-      const { data: usersResponse } = await supabase.auth.admin.listUsers();
-      const users = (usersResponse?.users || []) as AdminUser[];
+      // Get the corresponding user details from auth.users
+      const { data: { users } } = await supabase.auth.admin.listUsers();
       
-      // Match profiles with user details
+      if (!users) {
+        throw new Error('Failed to fetch users');
+      }
+
+      // Filter and map users to match our Client interface
       const clientList = users
         .filter(user => clientProfiles.some(profile => profile.id === user.id))
         .map(user => ({
@@ -64,6 +70,8 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
         description: "Failed to load clients. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,8 +79,8 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
     <div className="space-y-2">
       <label className="text-sm font-medium">Client</label>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select Client" />
+        <SelectTrigger disabled={loading}>
+          <SelectValue placeholder={loading ? "Loading clients..." : "Select Client"} />
         </SelectTrigger>
         <SelectContent>
           {clients.map((client) => (
