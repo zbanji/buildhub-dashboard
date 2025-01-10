@@ -55,7 +55,7 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
       }
 
       // Filter and map users to match our Client interface
-      const clientList = users
+      const clientList = (users as AdminUser[])
         .filter(user => clientProfiles.some(profile => profile.id === user.id))
         .map(user => ({
           id: user.id,
