@@ -37,11 +37,23 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
 
   const handleCommentSubmit = async (mediaId: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to comment.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('media_comments')
         .insert({
           media_id: mediaId,
           comment: comments[mediaId],
+          user_id: user.id
         });
 
       if (error) throw error;
@@ -54,6 +66,7 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
       // Clear the comment field
       setComments(prev => ({ ...prev, [mediaId]: '' }));
     } catch (error) {
+      console.error('Error submitting comment:', error);
       toast({
         title: "Error adding comment",
         description: "Please try again later.",
@@ -74,6 +87,29 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
 
         <TabsContent value="overview">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Milestones Section - Now on the left */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Milestones</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-8">
+                  {project.milestones.map((milestone) => (
+                    <div key={milestone.id} className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-medium">{milestone.name}</h3>
+                        <span className="text-sm text-muted-foreground">
+                          {milestone.status}
+                        </span>
+                      </div>
+                      <Progress value={milestone.progress} />
+                      <Separator className="mt-6" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Recent Updates Section - Now on the right */}
             <Card>
               <CardHeader>
@@ -96,29 +132,6 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
                         />
                       )}
                       <Separator className="mt-4" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Milestones Section - Now on the left */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Project Milestones</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-8">
-                  {project.milestones.map((milestone) => (
-                    <div key={milestone.id} className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-medium">{milestone.name}</h3>
-                        <span className="text-sm text-muted-foreground">
-                          {milestone.status}
-                        </span>
-                      </div>
-                      <Progress value={milestone.progress} />
-                      <Separator className="mt-6" />
                     </div>
                   ))}
                 </div>
