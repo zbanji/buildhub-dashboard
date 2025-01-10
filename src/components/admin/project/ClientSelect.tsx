@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { User } from '@supabase/supabase-js';
 
 interface Client {
   id: string;
@@ -11,6 +12,11 @@ interface Client {
 interface ClientSelectProps {
   value: string;
   onChange: (value: string) => void;
+}
+
+interface AdminUser extends User {
+  id: string;
+  email?: string;
 }
 
 export function ClientSelect({ value, onChange }: ClientSelectProps) {
@@ -39,12 +45,9 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
       }
 
       // Get the corresponding user details from auth
-      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+      const { data: usersResponse } = await supabase.auth.admin.listUsers();
+      const users = (usersResponse?.users || []) as AdminUser[];
       
-      if (usersError) {
-        throw usersError;
-      }
-
       // Match profiles with user details
       const clientList = users
         .filter(user => clientProfiles.some(profile => profile.id === user.id))
