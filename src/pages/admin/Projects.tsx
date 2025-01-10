@@ -10,7 +10,9 @@ import {
 import { useState } from "react";
 import { NewProjectDialog } from "@/components/admin/NewProjectDialog";
 import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { NewClientDialog } from "@/components/admin/NewClientDialog";
+import { Button } from "@/components/ui/button";
+import { Plus, UserPlus } from "lucide-react";
 
 interface Project {
   id: string;
@@ -88,6 +90,7 @@ export default function AdminProjects() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Project Management</h1>
           <div className="flex items-center gap-4">
+            <NewClientDialog />
             <NewProjectDialog />
           </div>
         </div>

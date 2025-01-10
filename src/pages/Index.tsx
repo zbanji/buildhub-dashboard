@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
-import { ProjectCard } from "@/components/ProjectCard";
 import { ProjectDetails } from "@/components/ProjectDetails";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
-// Mock data - replace with actual data from your backend
 const mockProjects = [
   {
     id: "1",
@@ -86,22 +84,29 @@ export default function Index() {
     <Layout>
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Projects List (Left Pane) */}
-        <div className="w-1/3 border-r overflow-y-auto p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold">Your Projects</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Select a project to view details
-            </p>
+        <div className="w-64 border-r overflow-y-auto">
+          <div className="p-4 border-b">
+            <h2 className="font-semibold">Projects</h2>
           </div>
-          <div className="space-y-4">
+          <div className="divide-y">
             {mockProjects.map((project) => (
-              <div key={project.id} onClick={() => setSelectedProject(project)}>
-                <ProjectCard
-                  project={project}
-                  onClick={() => setSelectedProject(project)}
-                />
-                <Separator className="mt-4" />
-              </div>
+              <button
+                key={project.id}
+                onClick={() => setSelectedProject(project)}
+                className={`w-full text-left p-4 hover:bg-accent transition-colors ${
+                  selectedProject?.id === project.id ? "bg-accent" : ""
+                }`}
+              >
+                <div className="space-y-2">
+                  <h3 className="font-medium truncate">{project.name}</h3>
+                  <Badge 
+                    variant={project.status === "In Progress" ? "default" : "secondary"}
+                    className="text-xs"
+                  >
+                    {project.status}
+                  </Badge>
+                </div>
+              </button>
             ))}
           </div>
         </div>
