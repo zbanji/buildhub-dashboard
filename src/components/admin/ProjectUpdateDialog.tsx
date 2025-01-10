@@ -13,10 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface ProjectUpdateDialogProps {
   projectId: string;
-  milestones: { name: string }[];  // Changed from 'stages' to 'milestones' to match the prop name
+  milestones: { name: string }[];
 }
 
-export function ProjectUpdateDialog({ projectId, milestones }: ProjectUpdateDialogProps) {
+export function ProjectUpdateDialog({ projectId, milestones = [] }: ProjectUpdateDialogProps) {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {

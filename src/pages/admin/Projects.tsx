@@ -109,7 +109,10 @@ export default function AdminProjects() {
                 <TableCell>{project.completionPercentage}%</TableCell>
                 <TableCell>${project.budget.toLocaleString()}</TableCell>
                 <TableCell>
-                  <ProjectUpdateDialog projectId={project.id} stages={project.stages} />
+                  <ProjectUpdateDialog 
+                    projectId={project.id} 
+                    milestones={project.stages} 
+                  />
                 </TableCell>
               </TableRow>
             ))}
