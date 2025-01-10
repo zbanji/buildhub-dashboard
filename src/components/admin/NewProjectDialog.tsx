@@ -21,6 +21,7 @@ interface ProjectMilestone {
 }
 
 export function NewProjectDialog() {
+  const [open, setOpen] = useState(false);
   const [milestones, setMilestones] = useState<ProjectMilestone[]>([
     { name: "", description: "", plannedCompletion: "" },
   ]);
@@ -42,30 +43,42 @@ export function NewProjectDialog() {
       return;
     }
 
-    const { error } = await supabase
-      .from('projects')
-      .insert({
-        name: projectName,
-        budget: parseFloat(budget),
-        square_footage: parseInt(squareFootage),
-        planned_completion: plannedCompletion,
-        description,
-        client_id: selectedClient,
-      });
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .insert({
+          name: projectName,
+          budget: parseFloat(budget),
+          square_footage: parseInt(squareFootage),
+          planned_completion: plannedCompletion,
+          description,
+          client_id: selectedClient,
+        });
 
-    if (error) {
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Project created successfully",
+      });
+      
+      setOpen(false);
+      // Reset form
+      setProjectName("");
+      setBudget("");
+      setSquareFootage("");
+      setPlannedCompletion("");
+      setDescription("");
+      setSelectedClient("");
+      setMilestones([{ name: "", description: "", plannedCompletion: "" }]);
+    } catch (error) {
+      console.error('Error creating project:', error);
       toast({
         title: "Error",
         description: "Failed to create project",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Success",
-      description: "Project created successfully",
-    });
   };
 
   const addMilestone = () => {
@@ -84,7 +97,7 @@ export function NewProjectDialog() {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />

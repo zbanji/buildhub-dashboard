@@ -7,11 +7,6 @@ interface Client {
   email: string;
 }
 
-interface UserResponse {
-  id: string;
-  email?: string | null;
-}
-
 interface ClientSelectProps {
   value: string;
   onChange: (value: string) => void;
@@ -25,27 +20,34 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
   }, []);
 
   const fetchClients = async () => {
-    const { data: users, error } = await supabase
+    // Get all users with 'client' role from profiles
+    const { data: clientProfiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id')
       .eq('role', 'client');
 
-    if (error) {
-      console.error('Error fetching clients:', error);
+    if (profilesError) {
+      console.error('Error fetching client profiles:', profilesError);
       return;
     }
 
-    const { data: userDetails } = await supabase.auth.admin.listUsers();
-    if (userDetails) {
-      const userList = userDetails.users as UserResponse[];
-      const clientList = userList
-        .filter(user => users.some(profile => profile.id === user.id))
-        .map(user => ({
-          id: user.id,
-          email: user.email || '',
-        }));
-      setClients(clientList);
+    // Get the corresponding user details from auth
+    const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+    
+    if (usersError) {
+      console.error('Error fetching users:', usersError);
+      return;
     }
+
+    // Match profiles with user details
+    const clientList = users
+      .filter(user => clientProfiles.some(profile => profile.id === user.id))
+      .map(user => ({
+        id: user.id,
+        email: user.email || '',
+      }));
+
+    setClients(clientList);
   };
 
   return (
