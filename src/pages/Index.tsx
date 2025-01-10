@@ -92,7 +92,7 @@ export default function Index() {
                 Select a project to view detailed information
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-4">
               {mockProjects.map((project) => (
                 <ProjectCard
                   key={project.id}

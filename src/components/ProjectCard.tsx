@@ -18,17 +18,17 @@ interface ProjectCardProps {
 export function ProjectCard({ project, onClick }: ProjectCardProps) {
   return (
     <Card 
-      className="hover:shadow-lg transition-shadow cursor-pointer mb-4" 
+      className="hover:shadow-lg transition-shadow cursor-pointer w-full mb-4" 
       onClick={onClick}
     >
       <CardContent className="p-6">
-        <div className="grid grid-cols-6 gap-4 items-center">
-          <div className="col-span-2">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
             <h3 className="font-semibold text-lg">{project.name}</h3>
             <span className="text-sm text-muted-foreground">{project.status}</span>
           </div>
           
-          <div className="col-span-2">
+          <div className="flex-1">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Progress</span>
@@ -38,7 +38,7 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 flex-1">
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">{project.budget}</span>
@@ -51,7 +51,7 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-2 justify-end">
+          <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm">{project.completionDate}</span>
           </div>
