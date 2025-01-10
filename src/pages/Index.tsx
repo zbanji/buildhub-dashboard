@@ -2,6 +2,10 @@ import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { ProjectDetails } from "@/components/ProjectDetails";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 
 const mockProjects = [
   {
@@ -98,39 +102,74 @@ const mockProjects = [
 
 export default function Index() {
   const [selectedProject, setSelectedProject] = useState<typeof mockProjects[0] | null>(null);
+  const isMobile = useIsMobile();
+
+  const ProjectsList = () => (
+    <div className="divide-y">
+      {mockProjects.map((project) => (
+        <button
+          key={project.id}
+          onClick={() => setSelectedProject(project)}
+          className={`w-full text-left p-4 hover:bg-accent transition-colors ${
+            selectedProject?.id === project.id ? "bg-accent" : ""
+          }`}
+        >
+          <div className="space-y-2">
+            <h3 className="font-medium truncate">{project.name}</h3>
+            <Badge 
+              variant={project.status === "In Progress" ? "default" : "secondary"}
+              className="text-xs"
+            >
+              {project.status}
+            </Badge>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Layout>
+        <div className="h-[calc(100vh-4rem)]">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="mb-4 w-full flex items-center gap-2">
+                <Menu className="h-4 w-4" />
+                Select Project
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+              <div className="mt-4">
+                <ProjectsList />
+              </div>
+            </SheetContent>
+          </Sheet>
+          <div className="h-full overflow-y-auto">
+            {selectedProject ? (
+              <ProjectDetails project={selectedProject} />
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <p className="text-muted-foreground">
+                  Select a project to view its details
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <div className="flex h-[calc(100vh-4rem)]">
-        {/* Projects List (Left Pane) */}
         <div className="w-64 border-r overflow-y-auto">
           <div className="p-4 border-b">
             <h2 className="font-semibold">Projects</h2>
           </div>
-          <div className="divide-y">
-            {mockProjects.map((project) => (
-              <button
-                key={project.id}
-                onClick={() => setSelectedProject(project)}
-                className={`w-full text-left p-4 hover:bg-accent transition-colors ${
-                  selectedProject?.id === project.id ? "bg-accent" : ""
-                }`}
-              >
-                <div className="space-y-2">
-                  <h3 className="font-medium truncate">{project.name}</h3>
-                  <Badge 
-                    variant={project.status === "In Progress" ? "default" : "secondary"}
-                    className="text-xs"
-                  >
-                    {project.status}
-                  </Badge>
-                </div>
-              </button>
-            ))}
-          </div>
+          <ProjectsList />
         </div>
-
-        {/* Project Details (Right Pane) */}
         <div className="flex-1 overflow-y-auto p-6">
           {selectedProject ? (
             <ProjectDetails project={selectedProject} />
