@@ -2,14 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Image } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Milestone {
   id: string;
   name: string;
   status: string;
   progress: number;
-  media?: { type: 'image' | 'video'; url: string }[];
+  media?: { type: 'image' | 'video'; url: string; id: string }[];
 }
 
 interface Update {
@@ -28,6 +32,36 @@ interface ProjectDetailsProps {
 }
 
 export function ProjectDetails({ project }: ProjectDetailsProps) {
+  const [comments, setComments] = useState<{ [key: string]: string }>({});
+  const { toast } = useToast();
+
+  const handleCommentSubmit = async (mediaId: string) => {
+    try {
+      const { error } = await supabase
+        .from('media_comments')
+        .insert({
+          media_id: mediaId,
+          comment: comments[mediaId],
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Comment added successfully",
+        description: "Your feedback has been recorded.",
+      });
+
+      // Clear the comment field
+      setComments(prev => ({ ...prev, [mediaId]: '' }));
+    } catch (error) {
+      toast({
+        title: "Error adding comment",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold">{project.name}</h2>
@@ -40,30 +74,7 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
 
         <TabsContent value="overview">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Milestones Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Project Milestones</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-8">
-                  {project.milestones.map((milestone) => (
-                    <div key={milestone.id} className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-medium">{milestone.name}</h3>
-                        <span className="text-sm text-muted-foreground">
-                          {milestone.status}
-                        </span>
-                      </div>
-                      <Progress value={milestone.progress} />
-                      <Separator className="mt-6" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Updates Section */}
+            {/* Recent Updates Section - Now on the right */}
             <Card>
               <CardHeader>
                 <CardTitle>Recent Updates</CardTitle>
@@ -90,6 +101,29 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Milestones Section - Now on the left */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Milestones</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-8">
+                  {project.milestones.map((milestone) => (
+                    <div key={milestone.id} className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-medium">{milestone.name}</h3>
+                        <span className="text-sm text-muted-foreground">
+                          {milestone.status}
+                        </span>
+                      </div>
+                      <Progress value={milestone.progress} />
+                      <Separator className="mt-6" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
@@ -103,22 +137,42 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
                 <div key={milestone.id} className="mb-8">
                   <h3 className="text-lg font-medium mb-4">{milestone.name}</h3>
                   {milestone.media && milestone.media.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="space-y-8">
                       {milestone.media.map((item, index) => (
-                        <div key={index} className="relative aspect-video">
-                          {item.type === 'image' ? (
-                            <img
-                              src={item.url}
-                              alt={`${milestone.name} media ${index + 1}`}
-                              className="rounded-md object-cover w-full h-full"
+                        <div key={index} className="space-y-4">
+                          <div className="relative aspect-video">
+                            {item.type === 'image' ? (
+                              <img
+                                src={item.url}
+                                alt={`${milestone.name} media ${index + 1}`}
+                                className="rounded-md object-cover w-full h-full"
+                              />
+                            ) : (
+                              <video
+                                src={item.url}
+                                controls
+                                className="rounded-md w-full h-full"
+                              />
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Textarea
+                              placeholder="Add your feedback..."
+                              value={comments[item.id] || ''}
+                              onChange={(e) => setComments(prev => ({
+                                ...prev,
+                                [item.id]: e.target.value
+                              }))}
+                              className="min-h-[100px]"
                             />
-                          ) : (
-                            <video
-                              src={item.url}
-                              controls
-                              className="rounded-md w-full h-full"
-                            />
-                          )}
+                            <Button 
+                              onClick={() => handleCommentSubmit(item.id)}
+                              className="w-full"
+                            >
+                              Submit Feedback
+                            </Button>
+                          </div>
+                          <Separator className="mt-4" />
                         </div>
                       ))}
                     </div>
