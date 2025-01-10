@@ -6,13 +6,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ClientSelect } from "./project/ClientSelect";
+import { ProjectForm } from "./project/ProjectForm";
+import { MilestoneForm } from "./project/MilestoneForm";
 
 interface ProjectMilestone {
   name: string;
@@ -20,21 +20,10 @@ interface ProjectMilestone {
   plannedCompletion: string;
 }
 
-interface Client {
-  id: string;
-  email: string;
-}
-
-interface UserResponse {
-  id: string;
-  email?: string | null;
-}
-
 export function NewProjectDialog() {
   const [milestones, setMilestones] = useState<ProjectMilestone[]>([
     { name: "", description: "", plannedCompletion: "" },
   ]);
-  const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [projectName, setProjectName] = useState("");
   const [budget, setBudget] = useState("");
@@ -42,34 +31,6 @@ export function NewProjectDialog() {
   const [plannedCompletion, setPlannedCompletion] = useState("");
   const [description, setDescription] = useState("");
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchClients();
-  }, []);
-
-  const fetchClients = async () => {
-    const { data: users, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'client');
-
-    if (error) {
-      console.error('Error fetching clients:', error);
-      return;
-    }
-
-    const { data: userDetails } = await supabase.auth.admin.listUsers();
-    if (userDetails) {
-      const userList = userDetails.users as UserResponse[];
-      const clientList = userList
-        .filter(user => users.some(profile => profile.id === user.id))
-        .map(user => ({
-          id: user.id,
-          email: user.email || '',
-        }));
-      setClients(clientList);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!selectedClient) {
@@ -135,88 +96,27 @@ export function NewProjectDialog() {
           <DialogTitle>Add New Project</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <Select value={selectedClient} onValueChange={setSelectedClient}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Client" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.email}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ClientSelect value={selectedClient} onChange={setSelectedClient} />
           
-          <div className="grid grid-cols-2 gap-4">
-            <Input 
-              placeholder="Project Name" 
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-            />
-            <Input 
-              type="number" 
-              placeholder="Budget ($)" 
-              value={budget}
-              onChange={(e) => setBudget(e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input 
-              type="number" 
-              placeholder="Square Footage"
-              value={squareFootage}
-              onChange={(e) => setSquareFootage(e.target.value)}
-            />
-            <Input 
-              type="date" 
-              placeholder="Planned Completion Date"
-              value={plannedCompletion}
-              onChange={(e) => setPlannedCompletion(e.target.value)}
-            />
-          </div>
-          <Textarea 
-            placeholder="Project Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+          <ProjectForm
+            projectName={projectName}
+            setProjectName={setProjectName}
+            budget={budget}
+            setBudget={setBudget}
+            squareFootage={squareFootage}
+            setSquareFootage={setSquareFootage}
+            plannedCompletion={plannedCompletion}
+            setPlannedCompletion={setPlannedCompletion}
+            description={description}
+            setDescription={setDescription}
           />
           
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Project Milestones</h3>
-              <Button onClick={addMilestone} variant="outline" size="sm">
-                Add Milestone
-              </Button>
-            </div>
-            {milestones.map((milestone, index) => (
-              <div key={index} className="space-y-2 p-4 border rounded-lg relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-2 top-2"
-                  onClick={() => removeMilestone(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-                <Input
-                  placeholder="Milestone Name"
-                  value={milestone.name}
-                  onChange={(e) => updateMilestone(index, "name", e.target.value)}
-                />
-                <Textarea
-                  placeholder="Milestone Description"
-                  value={milestone.description}
-                  onChange={(e) => updateMilestone(index, "description", e.target.value)}
-                />
-                <Input
-                  type="date"
-                  placeholder="Planned Completion"
-                  value={milestone.plannedCompletion}
-                  onChange={(e) => updateMilestone(index, "plannedCompletion", e.target.value)}
-                />
-              </div>
-            ))}
-          </div>
+          <MilestoneForm
+            milestones={milestones}
+            onAdd={addMilestone}
+            onRemove={removeMilestone}
+            onUpdate={updateMilestone}
+          />
         </div>
         <div className="flex justify-end">
           <Button onClick={handleSubmit}>Create Project</Button>
