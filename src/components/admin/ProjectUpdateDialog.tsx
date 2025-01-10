@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface ProjectUpdateDialogProps {
   projectId: string;
-  milestones: { name: string }[];
+  milestones: { name: string }[];  // Changed from 'stages' to 'milestones' to match the prop name
 }
 
 export function ProjectUpdateDialog({ projectId, milestones }: ProjectUpdateDialogProps) {
