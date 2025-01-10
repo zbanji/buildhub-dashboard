@@ -88,8 +88,12 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
 
         <TabsContent value="overview">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <UpdatesCard updates={project.updates} />
-            <MilestoneCard milestones={project.milestones} />
+            <div className="h-[600px] overflow-y-auto pr-4">
+              <UpdatesCard updates={project.updates} />
+            </div>
+            <div className="h-[600px] overflow-y-auto pr-4">
+              <MilestoneCard milestones={project.milestones} />
+            </div>
           </div>
         </TabsContent>
 
