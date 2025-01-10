@@ -1,4 +1,5 @@
 import { Layout } from "@/components/Layout";
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -11,7 +12,6 @@ import {
   CheckCircle2,
   Clock,
   DollarSign,
-  Image as ImageIcon,
 } from "lucide-react";
 
 const projectStats = [
