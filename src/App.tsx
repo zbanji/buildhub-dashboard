@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import AdminProjects from "./pages/admin/Projects";
 import AdminLogin from "./pages/auth/AdminLogin";
 import ClientLogin from "./pages/auth/ClientLogin";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -21,7 +22,14 @@ const App = () => {
             <Sonner />
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/admin/projects" element={<AdminProjects />} />
+              <Route
+                path="/admin/projects"
+                element={
+                  <ProtectedRoute allowedRole="admin">
+                    <AdminProjects />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/client/login" element={<ClientLogin />} />
             </Routes>
