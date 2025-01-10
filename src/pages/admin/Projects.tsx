@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { User } from '@supabase/supabase-js';
 
 interface Project {
   id: string;
@@ -33,6 +34,11 @@ interface Message {
   created_at: string;
   sender_id: string;
   sender_email?: string;
+}
+
+interface AdminUser extends User {
+  id: string;
+  email?: string;
 }
 
 export default function AdminProjects() {
@@ -63,10 +69,12 @@ export default function AdminProjects() {
     }
 
     // Fetch client emails
-    const { data: users } = await supabase.auth.admin.listUsers();
+    const { data: usersResponse } = await supabase.auth.admin.listUsers();
+    const users = (usersResponse?.users || []) as AdminUser[];
+    
     const projectsWithClientEmails = projectsData.map(project => ({
       ...project,
-      client_email: users?.users.find(user => user.id === project.client_id)?.email
+      client_email: users.find(user => user.id === project.client_id)?.email
     }));
 
     setProjects(projectsWithClientEmails);
@@ -85,10 +93,12 @@ export default function AdminProjects() {
     }
 
     // Fetch sender emails
-    const { data: users } = await supabase.auth.admin.listUsers();
+    const { data: usersResponse } = await supabase.auth.admin.listUsers();
+    const users = (usersResponse?.users || []) as AdminUser[];
+    
     const messagesWithSenderEmails = messagesData.map(message => ({
       ...message,
-      sender_email: users?.users.find(user => user.id === message.sender_id)?.email
+      sender_email: users.find(user => user.id === message.sender_id)?.email
     }));
 
     setMessages(messagesWithSenderEmails);
