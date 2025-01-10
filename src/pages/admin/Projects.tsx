@@ -1,5 +1,4 @@
 import { Layout } from "@/components/Layout";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -8,17 +7,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
+import { NewProjectDialog } from "@/components/admin/NewProjectDialog";
+import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
 
 interface Project {
   id: string;
@@ -26,6 +17,10 @@ interface Project {
   status: string;
   lastUpdate: string;
   completionPercentage: number;
+  stages: { name: string }[];
+  budget: number;
+  squareFootage: number;
+  plannedCompletion: string;
 }
 
 interface Update {
@@ -35,6 +30,8 @@ interface Update {
   title: string;
   description: string;
   imageUrl?: string;
+  stage?: string;
+  stageCompletion?: number;
 }
 
 export default function AdminProjects() {
@@ -45,6 +42,14 @@ export default function AdminProjects() {
       status: "In Progress",
       lastUpdate: "2024-02-20",
       completionPercentage: 45,
+      stages: [
+        { name: "Foundation" },
+        { name: "Framing" },
+        { name: "Interior" },
+      ],
+      budget: 500000,
+      squareFootage: 3500,
+      plannedCompletion: "2024-12-31",
     },
     {
       id: "2",
@@ -52,6 +57,14 @@ export default function AdminProjects() {
       status: "Planning",
       lastUpdate: "2024-02-19",
       completionPercentage: 15,
+      stages: [
+        { name: "Demo" },
+        { name: "Renovation" },
+        { name: "Finishing" },
+      ],
+      budget: 750000,
+      squareFootage: 5000,
+      plannedCompletion: "2024-10-15",
     },
   ]);
 
@@ -63,46 +76,17 @@ export default function AdminProjects() {
       title: "Foundation Work Complete",
       description: "The foundation has been laid and inspected.",
       imageUrl: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
+      stage: "Foundation",
+      stageCompletion: 100,
     },
   ]);
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log("File selected:", file.name);
-      // TODO: Implement file upload logic
-    }
-  };
 
   return (
     <Layout>
       <div className="space-y-8 p-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Project Management</h1>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                New Project
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Add New Project</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Input placeholder="Project Name" />
-                </div>
-                <div className="space-y-2">
-                  <Textarea placeholder="Project Description" />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button>Create Project</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <NewProjectDialog />
         </div>
 
         <Table>
@@ -112,6 +96,7 @@ export default function AdminProjects() {
               <TableHead>Status</TableHead>
               <TableHead>Last Update</TableHead>
               <TableHead>Completion</TableHead>
+              <TableHead>Budget</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -122,43 +107,9 @@ export default function AdminProjects() {
                 <TableCell>{project.status}</TableCell>
                 <TableCell>{project.lastUpdate}</TableCell>
                 <TableCell>{project.completionPercentage}%</TableCell>
+                <TableCell>${project.budget.toLocaleString()}</TableCell>
                 <TableCell>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Edit className="mr-2 h-4 w-4" />
-                        Add Update
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[625px]">
-                      <DialogHeader>
-                        <DialogTitle>Add Project Update</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <Input placeholder="Update Title" />
-                        <Textarea placeholder="Update Description" />
-                        <div className="space-y-2">
-                          <label className="block text-sm font-medium">
-                            Upload Images/Videos
-                          </label>
-                          <div className="flex items-center gap-4">
-                            <Input
-                              type="file"
-                              accept="image/*,video/*"
-                              onChange={handleFileUpload}
-                              className="flex-1"
-                            />
-                            <Button variant="outline" size="icon">
-                              <ImageIcon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-end">
-                        <Button>Save Update</Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <ProjectUpdateDialog projectId={project.id} stages={project.stages} />
                 </TableCell>
               </TableRow>
             ))}
@@ -177,10 +128,12 @@ export default function AdminProjects() {
                   <div>
                     <h3 className="text-lg font-semibold">{update.title}</h3>
                     <p className="text-sm text-gray-500">{update.date}</p>
+                    {update.stage && (
+                      <p className="text-sm text-blue-600">
+                        Stage: {update.stage} ({update.stageCompletion}% complete)
+                      </p>
+                    )}
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
                 </div>
                 <p className="text-gray-600 mb-4">{update.description}</p>
                 {update.imageUrl && (
