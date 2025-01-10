@@ -36,6 +36,41 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          project_id: string | null
+          sender_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          project_id?: string | null
+          sender_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          project_id?: string | null
+          sender_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -53,6 +88,45 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          budget: number
+          client_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          planned_completion: string
+          square_footage: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          budget: number
+          client_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          planned_completion: string
+          square_footage: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          budget?: number
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          planned_completion?: string
+          square_footage?: number
+          status?: string
           updated_at?: string
         }
         Relationships: []

@@ -7,82 +7,119 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NewProjectDialog } from "@/components/admin/NewProjectDialog";
 import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
-import { NewClientDialog } from "@/components/admin/NewClientDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, UserPlus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Project {
   id: string;
   name: string;
   status: string;
-  lastUpdate: string;
-  completionPercentage: number;
-  stages: { name: string }[];
+  client_id: string;
+  client_email?: string;
   budget: number;
-  squareFootage: number;
-  plannedCompletion: string;
+  square_footage: number;
+  planned_completion: string;
 }
 
-interface Update {
+interface Message {
   id: string;
-  projectId: string;
-  date: string;
-  title: string;
-  description: string;
-  imageUrl?: string;
-  stage?: string;
-  stageCompletion?: number;
+  content: string;
+  created_at: string;
+  sender_id: string;
+  sender_email?: string;
 }
 
 export default function AdminProjects() {
-  const [projects] = useState<Project[]>([
-    {
-      id: "1",
-      name: "Modern Villa Construction",
-      status: "In Progress",
-      lastUpdate: "2024-02-20",
-      completionPercentage: 45,
-      stages: [
-        { name: "Foundation" },
-        { name: "Framing" },
-        { name: "Interior" },
-      ],
-      budget: 500000,
-      squareFootage: 3500,
-      plannedCompletion: "2024-12-31",
-    },
-    {
-      id: "2",
-      name: "Office Complex Renovation",
-      status: "Planning",
-      lastUpdate: "2024-02-19",
-      completionPercentage: 15,
-      stages: [
-        { name: "Demo" },
-        { name: "Renovation" },
-        { name: "Finishing" },
-      ],
-      budget: 750000,
-      squareFootage: 5000,
-      plannedCompletion: "2024-10-15",
-    },
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const { toast } = useToast();
 
-  const [updates] = useState<Update[]>([
-    {
-      id: "1",
-      projectId: "1",
-      date: "2024-02-20",
-      title: "Foundation Work Complete",
-      description: "The foundation has been laid and inspected.",
-      imageUrl: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-      stage: "Foundation",
-      stageCompletion: 100,
-    },
-  ]);
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    if (selectedProject) {
+      fetchMessages(selectedProject);
+    }
+  }, [selectedProject]);
+
+  const fetchProjects = async () => {
+    const { data: projectsData, error } = await supabase
+      .from('projects')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching projects:', error);
+      return;
+    }
+
+    // Fetch client emails
+    const { data: users } = await supabase.auth.admin.listUsers();
+    const projectsWithClientEmails = projectsData.map(project => ({
+      ...project,
+      client_email: users?.users.find(user => user.id === project.client_id)?.email
+    }));
+
+    setProjects(projectsWithClientEmails);
+  };
+
+  const fetchMessages = async (projectId: string) => {
+    const { data: messagesData, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching messages:', error);
+      return;
+    }
+
+    // Fetch sender emails
+    const { data: users } = await supabase.auth.admin.listUsers();
+    const messagesWithSenderEmails = messagesData.map(message => ({
+      ...message,
+      sender_email: users?.users.find(user => user.id === message.sender_id)?.email
+    }));
+
+    setMessages(messagesWithSenderEmails);
+  };
+
+  const sendMessage = async () => {
+    if (!selectedProject || !newMessage.trim()) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('messages')
+      .insert({
+        project_id: selectedProject,
+        sender_id: user.id,
+        content: newMessage.trim()
+      });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setNewMessage("");
+    fetchMessages(selectedProject);
+  };
 
   return (
     <Layout>
@@ -90,72 +127,93 @@ export default function AdminProjects() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Project Management</h1>
           <div className="flex items-center gap-4">
-            <NewClientDialog />
             <NewProjectDialog />
           </div>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Project Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Last Update</TableHead>
-              <TableHead>Completion</TableHead>
-              <TableHead>Budget</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {projects.map((project) => (
-              <TableRow key={project.id}>
-                <TableCell className="font-medium">{project.name}</TableCell>
-                <TableCell>{project.status}</TableCell>
-                <TableCell>{project.lastUpdate}</TableCell>
-                <TableCell>{project.completionPercentage}%</TableCell>
-                <TableCell>${project.budget.toLocaleString()}</TableCell>
-                <TableCell>
-                  <ProjectUpdateDialog 
-                    projectId={project.id} 
-                    milestones={project.stages} 
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="grid grid-cols-3 gap-6">
+          <div className="col-span-2">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Project Name</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Budget</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projects.map((project) => (
+                  <TableRow 
+                    key={project.id}
+                    className={`cursor-pointer ${selectedProject === project.id ? 'bg-accent' : ''}`}
+                    onClick={() => setSelectedProject(project.id)}
+                  >
+                    <TableCell className="font-medium">{project.name}</TableCell>
+                    <TableCell>{project.client_email}</TableCell>
+                    <TableCell>{project.status}</TableCell>
+                    <TableCell>${project.budget.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <ProjectUpdateDialog 
+                        projectId={project.id} 
+                        milestones={[]} 
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Recent Updates</h2>
-          <div className="grid gap-6">
-            {updates.map((update) => (
-              <div
-                key={update.id}
-                className="rounded-lg border bg-card p-6 shadow-sm"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">{update.title}</h3>
-                    <p className="text-sm text-gray-500">{update.date}</p>
-                    {update.stage && (
-                      <p className="text-sm text-blue-600">
-                        Stage: {update.stage} ({update.stageCompletion}% complete)
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <p className="text-gray-600 mb-4">{update.description}</p>
-                {update.imageUrl && (
-                  <div className="rounded-md overflow-hidden">
-                    <img
-                      src={update.imageUrl}
-                      alt={update.title}
-                      className="w-full h-48 object-cover"
-                    />
+          <div className="col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Messages</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!selectedProject ? (
+                  <p className="text-muted-foreground text-center py-4">
+                    Select a project to view messages
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="h-[400px] overflow-y-auto space-y-4">
+                      {messages.map((message) => (
+                        <div
+                          key={message.id}
+                          className="p-3 rounded-lg bg-accent"
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-sm font-medium">
+                              {message.sender_email}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(message.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-sm">{message.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-2">
+                      <Textarea
+                        placeholder="Type your message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                      />
+                      <Button 
+                        className="w-full" 
+                        onClick={sendMessage}
+                        disabled={!selectedProject || !newMessage.trim()}
+                      >
+                        Send Message
+                      </Button>
+                    </div>
                   </div>
                 )}
-              </div>
-            ))}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
