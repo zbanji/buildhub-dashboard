@@ -17,18 +17,37 @@ const mockProjects = [
         name: "Foundation",
         status: "Completed",
         progress: 100,
+        media: [
+          {
+            id: "media1",
+            type: "image" as const,
+            url: "https://images.unsplash.com/photo-1590579491624-f98f36d4c763?q=80&w=1000",
+          },
+          {
+            id: "media2",
+            type: "image" as const,
+            url: "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?q=80&w=1000",
+          }
+        ]
       },
       {
         id: "m2",
         name: "Structure",
         status: "In Progress",
         progress: 75,
+        media: [
+          {
+            id: "media3",
+            type: "image" as const,
+            url: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=1000",
+          }
+        ]
       },
       {
         id: "m3",
         name: "Interior",
         status: "Not Started",
-        progress: 0,
+        progress: 0
       },
     ],
     updates: [
