@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Building2, LayoutDashboard, Users } from "lucide-react";
+import { Building2, LayoutDashboard, Users, Shield } from "lucide-react";
 
 export function Navigation() {
   const location = useLocation();
@@ -9,7 +9,7 @@ export function Navigation() {
 
   const navItems = [
     {
-      title: "Dashboard",
+      title: "Client Dashboard",
       href: "/",
       icon: LayoutDashboard,
     },
@@ -20,6 +20,11 @@ export function Navigation() {
     },
     ...(isAdmin
       ? [
+          {
+            title: "Admin Dashboard",
+            href: "/admin/projects",
+            icon: Shield,
+          },
           {
             title: "Users",
             href: "/users",
