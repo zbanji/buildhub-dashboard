@@ -1,4 +1,5 @@
 import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -46,7 +47,7 @@ export default function AdminLogin() {
         )}
         <Auth
           supabaseClient={supabase}
-          appearance={{ theme: "light" }}
+          appearance={{ theme: ThemeSupa }}
           providers={[]}
           redirectTo={window.location.origin + "/admin/projects"}
         />
