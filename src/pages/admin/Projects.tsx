@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { useState, useEffect } from "react";
 import { NewProjectDialog } from "@/components/admin/NewProjectDialog";
+import { NewClientDialog } from "@/components/admin/NewClientDialog";
 import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -133,16 +134,17 @@ export default function AdminProjects() {
 
   return (
     <Layout>
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
+      <div className="space-y-8 p-4 md:p-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <h1 className="text-3xl font-bold">Project Management</h1>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <NewClientDialog />
             <NewProjectDialog />
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
