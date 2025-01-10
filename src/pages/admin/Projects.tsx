@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { NewProjectDialog } from "@/components/admin/NewProjectDialog";
 import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Project {
   id: string;
@@ -83,10 +84,12 @@ export default function AdminProjects() {
 
   return (
     <Layout>
-      <div className="space-y-8 p-8">
+      <div className="space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Project Management</h1>
-          <NewProjectDialog />
+          <div className="flex items-center gap-4">
+            <NewProjectDialog />
+          </div>
         </div>
 
         <Table>
