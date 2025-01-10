@@ -25,6 +25,11 @@ interface Client {
   email: string;
 }
 
+interface UserResponse {
+  id: string;
+  email?: string | null;
+}
+
 export function NewProjectDialog() {
   const [milestones, setMilestones] = useState<ProjectMilestone[]>([
     { name: "", description: "", plannedCompletion: "" },
@@ -55,7 +60,8 @@ export function NewProjectDialog() {
 
     const { data: userDetails } = await supabase.auth.admin.listUsers();
     if (userDetails) {
-      const clientList = userDetails.users
+      const userList = userDetails.users as UserResponse[];
+      const clientList = userList
         .filter(user => users.some(profile => profile.id === user.id))
         .map(user => ({
           id: user.id,
