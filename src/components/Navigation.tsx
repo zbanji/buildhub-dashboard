@@ -1,37 +1,16 @@
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Building2, LayoutDashboard, Users, Shield } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 
 export function Navigation() {
   const location = useLocation();
-  const [isAdmin] = useState(true); // TODO: Replace with actual auth logic
 
   const navItems = [
     {
-      title: "Client Dashboard",
+      title: "Dashboard",
       href: "/",
       icon: LayoutDashboard,
     },
-    {
-      title: "Projects",
-      href: "/projects",
-      icon: Building2,
-    },
-    ...(isAdmin
-      ? [
-          {
-            title: "Admin Dashboard",
-            href: "/admin/projects",
-            icon: Shield,
-          },
-          {
-            title: "Users",
-            href: "/users",
-            icon: Users,
-          },
-        ]
-      : []),
   ];
 
   return (
