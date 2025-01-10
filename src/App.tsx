@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import AdminProjects from "./pages/admin/Projects";
+import AddClient from "./pages/admin/AddClient";
 import AdminLogin from "./pages/auth/AdminLogin";
 import ClientLogin from "./pages/auth/ClientLogin";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -27,6 +28,14 @@ const App = () => {
                 element={
                   <ProtectedRoute allowedRole="admin">
                     <AdminProjects />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/add-client"
+                element={
+                  <ProtectedRoute allowedRole="admin">
+                    <AddClient />
                   </ProtectedRoute>
                 }
               />

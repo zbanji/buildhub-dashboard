@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { ProjectCard } from "@/components/ProjectCard";
 import { ProjectDetails } from "@/components/ProjectDetails";
+import { Separator } from "@/components/ui/separator";
 
 // Mock data - replace with actual data from your backend
 const mockProjects = [
@@ -83,36 +84,40 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="space-y-8">
-        {!selectedProject ? (
-          <>
-            <div>
-              <h1 className="text-3xl font-bold">Your Projects</h1>
-              <p className="mt-2 text-gray-600">
-                Select a project to view detailed information
-              </p>
-            </div>
-            <div className="space-y-4">
-              {mockProjects.map((project) => (
+      <div className="flex h-[calc(100vh-4rem)]">
+        {/* Projects List (Left Pane) */}
+        <div className="w-1/3 border-r overflow-y-auto p-6">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold">Your Projects</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Select a project to view details
+            </p>
+          </div>
+          <div className="space-y-4">
+            {mockProjects.map((project) => (
+              <div key={project.id} onClick={() => setSelectedProject(project)}>
                 <ProjectCard
-                  key={project.id}
                   project={project}
                   onClick={() => setSelectedProject(project)}
                 />
-              ))}
-            </div>
-          </>
-        ) : (
-          <div>
-            <button
-              onClick={() => setSelectedProject(null)}
-              className="mb-6 text-sm font-medium text-primary hover:underline"
-            >
-              ← Back to Projects
-            </button>
-            <ProjectDetails project={selectedProject} />
+                <Separator className="mt-4" />
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+
+        {/* Project Details (Right Pane) */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {selectedProject ? (
+            <ProjectDetails project={selectedProject} />
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <p className="text-muted-foreground">
+                Select a project to view its details
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </Layout>
   );
