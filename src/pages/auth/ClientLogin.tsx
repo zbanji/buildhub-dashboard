@@ -16,7 +16,6 @@ export default function ClientLogin() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // Clear any existing session first
         await supabase.auth.signOut();
         setIsLoading(false);
       } catch (err) {
@@ -32,24 +31,30 @@ export default function ClientLogin() {
       if (event === 'SIGNED_IN' && session) {
         setIsLoading(true);
         try {
+          // First, verify the session is still valid
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            throw new Error("Session invalid");
+          }
+
+          // Then fetch the profile with detailed error logging
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("role")
-            .eq("id", session.user.id)
-            .single();
+            .eq("id", user.id)
+            .maybeSingle();
 
           if (profileError) {
-            console.error("Profile error:", profileError);
-            setError("Error verifying user role. Please try again.");
-            await supabase.auth.signOut();
-            return;
+            console.error("Profile fetch error:", profileError);
+            throw new Error("Error fetching user profile");
           }
 
           if (!profile) {
-            setError("User profile not found. Please contact support.");
-            await supabase.auth.signOut();
-            return;
+            console.error("No profile found for user:", user.id);
+            throw new Error("User profile not found");
           }
+
+          console.log("Profile retrieved:", profile);
 
           if (profile.role === "client") {
             toast({
@@ -58,12 +63,12 @@ export default function ClientLogin() {
             });
             navigate("/");
           } else {
-            setError("Access denied. This login is for clients only.");
-            await supabase.auth.signOut();
+            console.error("Invalid role:", profile.role);
+            throw new Error("Access denied. This login is for clients only.");
           }
         } catch (err) {
-          console.error("Auth state change error:", err);
-          setError("An error occurred while verifying your status.");
+          console.error("Authentication error:", err);
+          setError(err instanceof Error ? err.message : "Error verifying user role. Please try again.");
           await supabase.auth.signOut();
         } finally {
           setIsLoading(false);
