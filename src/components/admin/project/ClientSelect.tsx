@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User } from '@supabase/supabase-js';
 
 interface Client {
   id: string;
@@ -12,11 +11,6 @@ interface Client {
 interface ClientSelectProps {
   value: string;
   onChange: (value: string) => void;
-}
-
-interface AdminUser extends User {
-  id: string;
-  email?: string;
 }
 
 export function ClientSelect({ value, onChange }: ClientSelectProps) {
@@ -32,10 +26,13 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
     try {
       setLoading(true);
       
-      // First, get all users with 'client' role from profiles
+      // Get all users with 'client' role from profiles
       const { data: clientProfiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id')
+        .select(`
+          id,
+          role
+        `)
         .eq('role', 'client');
 
       if (profilesError) {
@@ -47,22 +44,20 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
         return;
       }
 
-      // Get the corresponding user details from auth.users
-      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
-      
-      if (usersError || !users) {
-        throw usersError || new Error('Failed to fetch users');
-      }
+      // For each client profile, get their email from auth.users
+      const clientPromises = clientProfiles.map(async (profile) => {
+        const { data: { user }, error } = await supabase.auth.admin.getUserById(profile.id);
+        if (error || !user?.email) return null;
+        return {
+          id: profile.id,
+          email: user.email
+        };
+      });
 
-      // Filter and map users to match our Client interface
-      const clientList = (users as AdminUser[])
-        .filter(user => clientProfiles.some(profile => profile.id === user.id))
-        .map(user => ({
-          id: user.id,
-          email: user.email || '',
-        }));
+      const resolvedClients = (await Promise.all(clientPromises))
+        .filter((client): client is Client => client !== null);
 
-      setClients(clientList);
+      setClients(resolvedClients);
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast({
