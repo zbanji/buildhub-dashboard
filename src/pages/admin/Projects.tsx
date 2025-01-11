@@ -43,7 +43,7 @@ export default function AdminProjects() {
           status,
           client_id,
           budget,
-          profiles:client_id (
+          profiles!projects_client_id_fkey (
             email
           )
         `);
@@ -57,7 +57,7 @@ export default function AdminProjects() {
         return [];
       }
 
-      return projectsData as Project[];
+      return projectsData as unknown as Project[];
     }
   });
 
@@ -71,7 +71,7 @@ export default function AdminProjects() {
           id,
           content,
           created_at,
-          profiles:sender_id (
+          profiles!messages_sender_id_fkey (
             email
           )
         `)
@@ -83,7 +83,7 @@ export default function AdminProjects() {
         return [];
       }
 
-      return messagesData as Message[];
+      return messagesData as unknown as Message[];
     }
   });
 
