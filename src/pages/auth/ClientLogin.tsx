@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AuthError } from "@supabase/supabase-js";
 
 export default function ClientLogin() {
   const navigate = useNavigate();
@@ -16,11 +17,17 @@ export default function ClientLogin() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        await supabase.auth.signOut();
+        // Clear any existing session first
+        const { error: sessionError } = await supabase.auth.signOut();
+        if (sessionError) throw sessionError;
+        
+        // Clear local storage to ensure no stale tokens remain
+        localStorage.removeItem('supabase.auth.token');
+        
         setIsLoading(false);
       } catch (err) {
         console.error("Session cleanup error:", err);
-        setError("An error occurred during session cleanup.");
+        setError(err instanceof Error ? err.message : "An error occurred during session cleanup.");
         setIsLoading(false);
       }
     };
@@ -35,12 +42,9 @@ export default function ClientLogin() {
             .from("profiles")
             .select("role")
             .eq("id", session.user.id)
-            .limit(1)
             .single();
 
-          if (profileError) {
-            throw new Error("Error fetching user profile");
-          }
+          if (profileError) throw profileError;
 
           if (!profileData) {
             throw new Error("User profile not found");
@@ -58,6 +62,7 @@ export default function ClientLogin() {
         } catch (err) {
           console.error("Authentication error:", err);
           setError(err instanceof Error ? err.message : "Error verifying user role. Please try again.");
+          // Sign out on error to clean up any invalid session state
           await supabase.auth.signOut();
         } finally {
           setIsLoading(false);
