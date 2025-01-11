@@ -45,31 +45,29 @@ export default function AdminLogin() {
 
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session) {
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", session.user.id)
-            .single();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
 
-          if (profileError) {
-            console.error("Profile error:", profileError);
-            setError("Failed to verify admin status");
-            await supabase.auth.signOut();
-            return;
-          }
+        if (profileError) {
+          console.error("Profile error:", profileError);
+          setError("Failed to verify admin status");
+          await supabase.auth.signOut();
+          return;
+        }
 
-          if (profile?.role === "admin") {
-            navigate("/admin/projects");
-          } else {
-            setError("Access denied. This login is for administrators only.");
-            await supabase.auth.signOut();
-          }
+        if (profile?.role === "admin") {
+          navigate("/admin/projects");
+        } else {
+          setError("Access denied. This login is for administrators only.");
+          await supabase.auth.signOut();
         }
       }
-    );
+    });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -91,7 +89,7 @@ export default function AdminLogin() {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           providers={[]}
-          redirectTo={window.location.origin + "/admin/projects"}
+          redirectTo={`${window.location.origin}/admin/projects`}
         />
       </div>
     </div>
