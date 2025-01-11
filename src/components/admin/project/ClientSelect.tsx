@@ -32,7 +32,7 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
     try {
       setLoading(true);
       
-      // Get all users with 'client' role from profiles
+      // First, get all users with 'client' role from profiles
       const { data: clientProfiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id')
@@ -48,10 +48,10 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
       }
 
       // Get the corresponding user details from auth.users
-      const { data: { users } } = await supabase.auth.admin.listUsers();
+      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
       
-      if (!users) {
-        throw new Error('Failed to fetch users');
+      if (usersError || !users) {
+        throw usersError || new Error('Failed to fetch users');
       }
 
       // Filter and map users to match our Client interface
