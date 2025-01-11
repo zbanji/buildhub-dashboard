@@ -17,11 +17,18 @@ export default function ClientLogin() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("role")
             .eq("id", session.user.id)
             .single();
+
+          if (profileError) {
+            console.error("Profile error:", profileError);
+            setError("Error verifying user role. Please try again.");
+            await supabase.auth.signOut();
+            return;
+          }
 
           if (profile?.role === "client") {
             navigate("/");
@@ -44,11 +51,18 @@ export default function ClientLogin() {
       if (event === 'SIGNED_IN' && session) {
         setIsLoading(true);
         try {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("role")
             .eq("id", session.user.id)
             .single();
+
+          if (profileError) {
+            console.error("Profile error:", profileError);
+            setError("Error verifying user role. Please try again.");
+            await supabase.auth.signOut();
+            return;
+          }
 
           if (profile?.role === "client") {
             navigate("/");
