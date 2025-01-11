@@ -1,51 +1,15 @@
 import { Layout } from "@/components/Layout";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useState } from "react";
 import { NewProjectDialog } from "@/components/admin/NewProjectDialog";
 import { NewClientDialog } from "@/components/admin/NewClientDialog";
-import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-
-interface Project {
-  id: string;
-  name: string;
-  status: string;
-  client_id: string;
-  client_email?: string;
-  budget: number;
-  square_footage: number;
-  planned_completion: string;
-  description: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface Message {
-  id: string;
-  content: string;
-  created_at: string;
-  sender_id: string | null;
-  project_id: string | null;
-  updated_at: string;
-  sender_email?: string;
-}
+import { supabase } from "@/integrations/supabase/client";
+import { ProjectList } from "@/components/admin/projects/ProjectList";
+import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
 
 export default function AdminProjects() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState("");
   const { toast } = useToast();
 
   const { data: projects = [], refetch: refetchProjects } = useQuery({
@@ -69,63 +33,36 @@ export default function AdminProjects() {
         return [];
       }
 
-      return (projectsData || []).map(project => ({
-        ...project,
-        client_email: project.profiles?.email
-      })) as Project[];
+      return projectsData || [];
     }
   });
 
-  const fetchMessages = async (projectId: string) => {
-    const { data: messagesData, error } = await supabase
-      .from('messages')
-      .select(`
-        *,
-        profiles!messages_sender_id_fkey (
-          email
-        )
-      `)
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true });
+  const { data: messages = [], refetch: refetchMessages } = useQuery({
+    queryKey: ['messages', selectedProject],
+    enabled: !!selectedProject,
+    queryFn: async () => {
+      const { data: messagesData, error } = await supabase
+        .from('messages')
+        .select(`
+          *,
+          profiles!messages_sender_id_fkey (
+            email
+          )
+        `)
+        .eq('project_id', selectedProject)
+        .order('created_at', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching messages:', error);
-      return;
+      if (error) {
+        console.error('Error fetching messages:', error);
+        return [];
+      }
+
+      return messagesData || [];
     }
+  });
 
-    const formattedMessages = (messagesData || []).map(message => ({
-      ...message,
-      sender_email: message.profiles?.email
-    })) as Message[];
-
-    setMessages(formattedMessages);
-  };
-
-  const sendMessage = async () => {
-    if (!selectedProject || !newMessage.trim()) return;
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        project_id: selectedProject,
-        sender_id: user.id,
-        content: newMessage.trim()
-      });
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setNewMessage("");
-    fetchMessages(selectedProject);
+  const handleProjectSelect = (projectId: string) => {
+    setSelectedProject(projectId);
   };
 
   return (
@@ -141,90 +78,19 @@ export default function AdminProjects() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Project Name</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Budget</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {projects.map((project) => (
-                  <TableRow 
-                    key={project.id}
-                    className={`cursor-pointer ${selectedProject === project.id ? 'bg-accent' : ''}`}
-                    onClick={() => {
-                      setSelectedProject(project.id);
-                      fetchMessages(project.id);
-                    }}
-                  >
-                    <TableCell className="font-medium">{project.name}</TableCell>
-                    <TableCell>{project.client_email}</TableCell>
-                    <TableCell>{project.status}</TableCell>
-                    <TableCell>${project.budget.toLocaleString()}</TableCell>
-                    <TableCell>
-                      <ProjectUpdateDialog 
-                        projectId={project.id}
-                        milestones={[]}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <ProjectList
+              projects={projects}
+              selectedProject={selectedProject}
+              onProjectSelect={handleProjectSelect}
+            />
           </div>
 
           <div className="col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Project Messages</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {!selectedProject ? (
-                  <p className="text-muted-foreground text-center py-4">
-                    Select a project to view messages
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="h-[400px] overflow-y-auto space-y-4">
-                      {messages.map((message) => (
-                        <div
-                          key={message.id}
-                          className="p-3 rounded-lg bg-accent"
-                        >
-                          <div className="flex justify-between items-start mb-1">
-                            <span className="text-sm font-medium">
-                              {message.sender_email}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(message.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <p className="text-sm">{message.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="space-y-2">
-                      <Textarea
-                        placeholder="Type your message..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                      />
-                      <Button 
-                        className="w-full" 
-                        onClick={sendMessage}
-                        disabled={!selectedProject || !newMessage.trim()}
-                      >
-                        Send Message
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ProjectMessages
+              selectedProject={selectedProject}
+              messages={messages}
+              onMessageSent={refetchMessages}
+            />
           </div>
         </div>
       </div>
