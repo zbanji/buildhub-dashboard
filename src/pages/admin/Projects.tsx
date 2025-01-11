@@ -57,7 +57,7 @@ export default function AdminProjects() {
         return [];
       }
 
-      return (projectsData || []) as Project[];
+      return projectsData as Project[];
     }
   });
 
@@ -83,7 +83,7 @@ export default function AdminProjects() {
         return [];
       }
 
-      return (messagesData || []) as Message[];
+      return messagesData as Message[];
     }
   });
 
