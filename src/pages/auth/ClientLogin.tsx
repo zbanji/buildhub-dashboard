@@ -31,39 +31,28 @@ export default function ClientLogin() {
       if (event === 'SIGNED_IN' && session) {
         setIsLoading(true);
         try {
-          // First, verify the session is still valid
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) {
-            throw new Error("Session invalid");
-          }
-
-          // Then fetch the profile with detailed error logging
-          const { data: profile, error: profileError } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select("role")
-            .eq("id", user.id)
-            .maybeSingle();
+            .eq("id", session.user.id)
+            .limit(1)
+            .single();
 
           if (profileError) {
-            console.error("Profile fetch error:", profileError);
             throw new Error("Error fetching user profile");
           }
 
-          if (!profile) {
-            console.error("No profile found for user:", user.id);
+          if (!profileData) {
             throw new Error("User profile not found");
           }
 
-          console.log("Profile retrieved:", profile);
-
-          if (profile.role === "client") {
+          if (profileData.role === "client") {
             toast({
               title: "Welcome back!",
               description: "Successfully logged in as client.",
             });
             navigate("/");
           } else {
-            console.error("Invalid role:", profile.role);
             throw new Error("Access denied. This login is for clients only.");
           }
         } catch (err) {
