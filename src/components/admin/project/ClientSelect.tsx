@@ -31,7 +31,7 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
         .from('profiles')
         .select(`
           id,
-          role
+          email
         `)
         .eq('role', 'client');
 
@@ -44,20 +44,13 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
         return;
       }
 
-      // For each client profile, get their email from auth.users
-      const clientPromises = clientProfiles.map(async (profile) => {
-        const { data: { user }, error } = await supabase.auth.admin.getUserById(profile.id);
-        if (error || !user?.email) return null;
-        return {
-          id: profile.id,
-          email: user.email
-        };
-      });
+      // Map the profiles to our Client interface
+      const clientList = clientProfiles.map(profile => ({
+        id: profile.id,
+        email: profile.email || 'No email'
+      }));
 
-      const resolvedClients = (await Promise.all(clientPromises))
-        .filter((client): client is Client => client !== null);
-
-      setClients(resolvedClients);
+      setClients(clientList);
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast({
