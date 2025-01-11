@@ -17,19 +17,11 @@ export default function ClientLogin() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          const { data: profile, error: profileError } = await supabase
+          const { data: profile } = await supabase
             .from("profiles")
             .select("role")
             .eq("id", session.user.id)
             .single();
-
-          if (profileError) {
-            console.error("Profile error:", profileError);
-            setError("Failed to verify client status. Please try again.");
-            await supabase.auth.signOut();
-            setIsLoading(false);
-            return;
-          }
 
           if (profile?.role === "client") {
             navigate("/");
@@ -50,19 +42,13 @@ export default function ClientLogin() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
+        setIsLoading(true);
         try {
-          const { data: profile, error: profileError } = await supabase
+          const { data: profile } = await supabase
             .from("profiles")
             .select("role")
             .eq("id", session.user.id)
             .single();
-
-          if (profileError) {
-            console.error("Profile error:", profileError);
-            setError("Failed to verify client status. Please try again.");
-            await supabase.auth.signOut();
-            return;
-          }
 
           if (profile?.role === "client") {
             navigate("/");
@@ -74,6 +60,8 @@ export default function ClientLogin() {
           console.error("Auth state change error:", err);
           setError("An error occurred while verifying your status.");
           await supabase.auth.signOut();
+        } finally {
+          setIsLoading(false);
         }
       }
     });
