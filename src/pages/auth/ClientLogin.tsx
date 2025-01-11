@@ -4,34 +4,45 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 export default function ClientLogin() {
   const navigate = useNavigate();
   const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", session.user.id)
+            .single();
 
-        if (profileError) {
-          console.error("Profile error:", profileError);
-          setError("Failed to verify client status");
-          await supabase.auth.signOut();
-          return;
-        }
+          if (profileError) {
+            console.error("Profile error:", profileError);
+            setError("Failed to verify client status. Please try again.");
+            await supabase.auth.signOut();
+            setIsLoading(false);
+            return;
+          }
 
-        if (profile?.role === "client") {
-          navigate("/");
-        } else {
-          setError("Access denied. This login is for clients only.");
-          await supabase.auth.signOut();
+          if (profile?.role === "client") {
+            navigate("/");
+          } else {
+            setError("Access denied. This login is for clients only.");
+            await supabase.auth.signOut();
+          }
         }
+      } catch (err) {
+        console.error("Session check error:", err);
+        setError("An error occurred while verifying your status.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -39,23 +50,29 @@ export default function ClientLogin() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", session.user.id)
+            .single();
 
-        if (profileError) {
-          console.error("Profile error:", profileError);
-          setError("Failed to verify client status");
-          await supabase.auth.signOut();
-          return;
-        }
+          if (profileError) {
+            console.error("Profile error:", profileError);
+            setError("Failed to verify client status. Please try again.");
+            await supabase.auth.signOut();
+            return;
+          }
 
-        if (profile?.role === "client") {
-          navigate("/");
-        } else {
-          setError("Access denied. This login is for clients only.");
+          if (profile?.role === "client") {
+            navigate("/");
+          } else {
+            setError("Access denied. This login is for clients only.");
+            await supabase.auth.signOut();
+          }
+        } catch (err) {
+          console.error("Auth state change error:", err);
+          setError("An error occurred while verifying your status.");
           await supabase.auth.signOut();
         }
       }
@@ -63,6 +80,14 @@ export default function ClientLogin() {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
