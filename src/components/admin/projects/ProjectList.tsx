@@ -8,12 +8,16 @@ import {
 } from "@/components/ui/table";
 import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
 
+interface Profile {
+  email: string | null;
+}
+
 interface Project {
   id: string;
   name: string;
   status: string;
   client_id: string;
-  profiles?: { email: string | null } | null;
+  profiles?: Profile | null;
   budget: number;
 }
 

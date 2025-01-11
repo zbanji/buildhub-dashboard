@@ -8,6 +8,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProjectList } from "@/components/admin/projects/ProjectList";
 import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
 
+interface Profile {
+  email: string | null;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  status: string;
+  client_id: string;
+  budget: number;
+  profiles?: Profile | null;
+}
+
+interface Message {
+  id: string;
+  content: string;
+  created_at: string;
+  profiles?: Profile | null;
+}
+
 export default function AdminProjects() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const { toast } = useToast();
@@ -18,8 +38,12 @@ export default function AdminProjects() {
       const { data: projectsData, error } = await supabase
         .from('projects')
         .select(`
-          *,
-          profiles!projects_client_id_fkey (
+          id,
+          name,
+          status,
+          client_id,
+          budget,
+          profiles (
             email
           )
         `);
@@ -33,7 +57,7 @@ export default function AdminProjects() {
         return [];
       }
 
-      return projectsData || [];
+      return (projectsData || []) as Project[];
     }
   });
 
@@ -44,8 +68,10 @@ export default function AdminProjects() {
       const { data: messagesData, error } = await supabase
         .from('messages')
         .select(`
-          *,
-          profiles!messages_sender_id_fkey (
+          id,
+          content,
+          created_at,
+          profiles (
             email
           )
         `)
@@ -57,7 +83,7 @@ export default function AdminProjects() {
         return [];
       }
 
-      return messagesData || [];
+      return (messagesData || []) as Message[];
     }
   });
 

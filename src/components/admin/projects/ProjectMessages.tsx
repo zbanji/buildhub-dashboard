@@ -5,11 +5,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+interface Profile {
+  email: string | null;
+}
+
 interface Message {
   id: string;
   content: string;
   created_at: string;
-  profiles?: { email: string | null } | null;
+  profiles?: Profile | null;
 }
 
 interface ProjectMessagesProps {
