@@ -55,7 +55,7 @@ export default function AdminProjects() {
         .from('projects')
         .select(`
           *,
-          profiles:client_id (
+          client:client_id (
             email
           )
         `);
@@ -71,7 +71,7 @@ export default function AdminProjects() {
 
       return (projectsData || []).map(project => ({
         ...project,
-        client_email: project.profiles?.email
+        client_email: project.client?.email
       })) as Project[];
     }
   });
@@ -81,7 +81,7 @@ export default function AdminProjects() {
       .from('messages')
       .select(`
         *,
-        profiles:sender_id (
+        sender:sender_id (
           email
         )
       `)
@@ -95,7 +95,7 @@ export default function AdminProjects() {
 
     const formattedMessages = (messagesData || []).map(message => ({
       ...message,
-      sender_email: message.profiles?.email
+      sender_email: message.sender?.email
     })) as Message[];
 
     setMessages(formattedMessages);
@@ -135,7 +135,7 @@ export default function AdminProjects() {
           <h1 className="text-3xl font-bold">Project Management</h1>
           <div className="flex flex-wrap items-center gap-4">
             <NewClientDialog />
-            <NewProjectDialog onSuccess={refetchProjects} />
+            <NewProjectDialog />
           </div>
         </div>
 
@@ -156,7 +156,10 @@ export default function AdminProjects() {
                   <TableRow 
                     key={project.id}
                     className={`cursor-pointer ${selectedProject === project.id ? 'bg-accent' : ''}`}
-                    onClick={() => setSelectedProject(project.id)}
+                    onClick={() => {
+                      setSelectedProject(project.id);
+                      fetchMessages(project.id);
+                    }}
                   >
                     <TableCell className="font-medium">{project.name}</TableCell>
                     <TableCell>{project.client_email}</TableCell>
@@ -164,8 +167,7 @@ export default function AdminProjects() {
                     <TableCell>${project.budget.toLocaleString()}</TableCell>
                     <TableCell>
                       <ProjectUpdateDialog 
-                        projectId={project.id} 
-                        onSuccess={refetchProjects}
+                        projectId={project.id}
                       />
                     </TableCell>
                   </TableRow>
