@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { MediaGalleryItem } from "./MediaGalleryItem";
 
 interface ProjectMedia {
@@ -36,9 +35,6 @@ export function MediaGallery({ projectMedia, selectedMilestone }: MediaGalleryPr
               }}
               index={index}
               milestoneName={selectedMilestone || "Project"}
-              comment=""
-              onCommentChange={() => {}}
-              onCommentSubmit={() => {}}
             />
           ))}
           {filteredMedia.length === 0 && (
