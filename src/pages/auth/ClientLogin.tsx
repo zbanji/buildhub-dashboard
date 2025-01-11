@@ -5,46 +5,23 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ClientLogin() {
   const navigate = useNavigate();
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkSession = async () => {
       try {
         // Clear any existing session first
         await supabase.auth.signOut();
-        
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", session.user.id)
-            .single();
-
-          if (profileError) {
-            console.error("Profile error:", profileError);
-            setError("Error verifying user role. Please try again.");
-            await supabase.auth.signOut();
-            return;
-          }
-
-          if (profile?.role === "client") {
-            navigate("/");
-          } else {
-            setError("Access denied. This login is for clients only.");
-            await supabase.auth.signOut();
-          }
-        }
+        setIsLoading(false);
       } catch (err) {
-        console.error("Session check error:", err);
-        setError("An error occurred while verifying your status.");
-        await supabase.auth.signOut();
-      } finally {
+        console.error("Session cleanup error:", err);
+        setError("An error occurred during session cleanup.");
         setIsLoading(false);
       }
     };
@@ -68,7 +45,17 @@ export default function ClientLogin() {
             return;
           }
 
-          if (profile?.role === "client") {
+          if (!profile) {
+            setError("User profile not found. Please contact support.");
+            await supabase.auth.signOut();
+            return;
+          }
+
+          if (profile.role === "client") {
+            toast({
+              title: "Welcome back!",
+              description: "Successfully logged in as client.",
+            });
             navigate("/");
           } else {
             setError("Access denied. This login is for clients only.");
@@ -87,7 +74,7 @@ export default function ClientLogin() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, toast]);
 
   if (isLoading) {
     return (
