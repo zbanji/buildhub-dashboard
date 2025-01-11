@@ -55,7 +55,7 @@ export default function AdminProjects() {
         .from('projects')
         .select(`
           *,
-          client:client_id (
+          profiles!projects_client_id_fkey (
             email
           )
         `);
@@ -71,7 +71,7 @@ export default function AdminProjects() {
 
       return (projectsData || []).map(project => ({
         ...project,
-        client_email: project.client?.email
+        client_email: project.profiles?.email
       })) as Project[];
     }
   });
@@ -81,7 +81,7 @@ export default function AdminProjects() {
       .from('messages')
       .select(`
         *,
-        sender:sender_id (
+        profiles!messages_sender_id_fkey (
           email
         )
       `)
@@ -95,7 +95,7 @@ export default function AdminProjects() {
 
     const formattedMessages = (messagesData || []).map(message => ({
       ...message,
-      sender_email: message.sender?.email
+      sender_email: message.profiles?.email
     })) as Message[];
 
     setMessages(formattedMessages);
@@ -168,6 +168,7 @@ export default function AdminProjects() {
                     <TableCell>
                       <ProjectUpdateDialog 
                         projectId={project.id}
+                        milestones={[]}
                       />
                     </TableCell>
                   </TableRow>
