@@ -63,8 +63,8 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
 
         if (mediaError) throw mediaError;
 
-        // Transform data
-        const formattedMilestones = milestonesData.map(m => ({
+        // Transform data with explicit type checking
+        const formattedMilestones: Milestone[] = milestonesData.map(m => ({
           id: m.id,
           name: m.name,
           status: m.status,
@@ -72,7 +72,7 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
           media: mediaData
             .filter(media => media.milestone_id === m.id)
             .map(media => ({
-              type: media.file_type.includes('image') ? 'image' : 'video',
+              type: media.file_type.includes('image') ? 'image' as const : 'video' as const,
               url: media.file_path,
               id: media.id
             }))
