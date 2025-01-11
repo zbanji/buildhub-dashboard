@@ -43,7 +43,7 @@ export default function AdminProjects() {
           status,
           client_id,
           budget,
-          profiles (
+          profiles:client_id (
             email
           )
         `);
@@ -71,7 +71,7 @@ export default function AdminProjects() {
           id,
           content,
           created_at,
-          profiles (
+          profiles:sender_id (
             email
           )
         `)
