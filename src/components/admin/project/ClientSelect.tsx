@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User } from '@supabase/supabase-js';
 
 interface Client {
   id: string;
@@ -12,11 +11,6 @@ interface Client {
 interface ClientSelectProps {
   value: string;
   onChange: (value: string) => void;
-}
-
-interface AdminUser extends User {
-  id: string;
-  email?: string;
 }
 
 export function ClientSelect({ value, onChange }: ClientSelectProps) {
@@ -35,7 +29,10 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
       // Get all users with 'client' role from profiles
       const { data: clientProfiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id')
+        .select(`
+          id,
+          email
+        `)
         .eq('role', 'client');
 
       if (profilesError) {
@@ -47,20 +44,11 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
         return;
       }
 
-      // Get the corresponding user details from auth.users
-      const { data: { users } } = await supabase.auth.admin.listUsers();
-      
-      if (!users) {
-        throw new Error('Failed to fetch users');
-      }
-
-      // Filter and map users to match our Client interface
-      const clientList = (users as AdminUser[])
-        .filter(user => clientProfiles.some(profile => profile.id === user.id))
-        .map(user => ({
-          id: user.id,
-          email: user.email || '',
-        }));
+      // Map the profiles to our Client interface
+      const clientList = clientProfiles.map(profile => ({
+        id: profile.id,
+        email: profile.email || 'No email'
+      }));
 
       setClients(clientList);
     } catch (error) {
