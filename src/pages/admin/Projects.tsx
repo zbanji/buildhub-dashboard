@@ -28,6 +28,9 @@ interface Project {
   budget: number;
   square_footage: number;
   planned_completion: string;
+  profiles?: {
+    email: string;
+  };
 }
 
 interface Message {
@@ -36,11 +39,9 @@ interface Message {
   created_at: string;
   sender_id: string;
   sender_email?: string;
-}
-
-interface AdminUser extends User {
-  id: string;
-  email?: string;
+  profiles?: {
+    email: string;
+  };
 }
 
 export default function AdminProjects() {
@@ -54,7 +55,12 @@ export default function AdminProjects() {
     queryFn: async () => {
       const { data: projectsData, error } = await supabase
         .from('projects')
-        .select('*, profiles(email)');
+        .select(`
+          *,
+          profiles:client_id (
+            email
+          )
+        `);
 
       if (error) {
         toast({
@@ -81,7 +87,12 @@ export default function AdminProjects() {
   const fetchMessages = async (projectId: string) => {
     const { data: messagesData, error } = await supabase
       .from('messages')
-      .select('*, profiles(email)')
+      .select(`
+        *,
+        profiles:sender_id (
+          email
+        )
+      `)
       .eq('project_id', projectId)
       .order('created_at', { ascending: true });
 

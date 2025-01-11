@@ -18,8 +18,17 @@ interface Project {
   budget: number;
   square_footage: number;
   planned_completion: string;
+  completionDate: string;
+  squareFootage: string;
+  progress: number;
   milestones: any[];
   updates: any[];
+  project_media: {
+    id: string;
+    file_path: string;
+    file_type: string;
+    milestone_id: string | null;
+  }[];
 }
 
 export default function Index() {
@@ -61,12 +70,11 @@ export default function Index() {
 
       return projectsData.map(project => ({
         ...project,
-        budget: `$${project.budget.toLocaleString()}`,
         completionDate: new Date(project.planned_completion).toLocaleDateString(),
         squareFootage: `${project.square_footage.toLocaleString()}`,
-        progress: 0, // You might want to calculate this based on milestones
-        milestones: [], // You might want to fetch these from a milestones table
-        updates: [], // You might want to fetch these from an updates table
+        progress: 0,
+        milestones: [],
+        updates: [],
       }));
     },
   });
