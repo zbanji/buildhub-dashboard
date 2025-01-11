@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { NewProjectDialog } from "@/components/admin/NewProjectDialog";
 import { NewClientDialog } from "@/components/admin/NewClientDialog";
 import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
@@ -16,7 +16,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User } from '@supabase/supabase-js';
 import { useQuery } from "@tanstack/react-query";
 
 interface Project {
@@ -28,20 +27,19 @@ interface Project {
   budget: number;
   square_footage: number;
   planned_completion: string;
-  profiles?: {
-    email: string;
-  };
+  description: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Message {
   id: string;
   content: string;
   created_at: string;
-  sender_id: string;
+  sender_id: string | null;
+  project_id: string | null;
+  updated_at: string;
   sender_email?: string;
-  profiles?: {
-    email: string;
-  };
 }
 
 export default function AdminProjects() {
@@ -71,18 +69,12 @@ export default function AdminProjects() {
         return [];
       }
 
-      return projectsData.map(project => ({
+      return (projectsData || []).map(project => ({
         ...project,
         client_email: project.profiles?.email
-      }));
+      })) as Project[];
     }
   });
-
-  useEffect(() => {
-    if (selectedProject) {
-      fetchMessages(selectedProject);
-    }
-  }, [selectedProject]);
 
   const fetchMessages = async (projectId: string) => {
     const { data: messagesData, error } = await supabase
@@ -101,12 +93,12 @@ export default function AdminProjects() {
       return;
     }
 
-    const messagesWithSenderEmails = messagesData.map(message => ({
+    const formattedMessages = (messagesData || []).map(message => ({
       ...message,
       sender_email: message.profiles?.email
-    }));
+    })) as Message[];
 
-    setMessages(messagesWithSenderEmails);
+    setMessages(formattedMessages);
   };
 
   const sendMessage = async () => {
@@ -143,7 +135,7 @@ export default function AdminProjects() {
           <h1 className="text-3xl font-bold">Project Management</h1>
           <div className="flex flex-wrap items-center gap-4">
             <NewClientDialog />
-            <NewProjectDialog onProjectCreated={refetchProjects} />
+            <NewProjectDialog onSuccess={refetchProjects} />
           </div>
         </div>
 
@@ -173,8 +165,7 @@ export default function AdminProjects() {
                     <TableCell>
                       <ProjectUpdateDialog 
                         projectId={project.id} 
-                        milestones={[]} 
-                        onProjectUpdated={refetchProjects}
+                        onSuccess={refetchProjects}
                       />
                     </TableCell>
                   </TableRow>
