@@ -4,17 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface Profile {
-  email: string | null;
-}
-
-interface Message {
-  id: string;
-  content: string;
-  created_at: string;
-  profiles?: Profile | null;
-}
+import { Message } from "@/hooks/use-project-data";
+import { MessageList } from "./MessageList";
 
 interface ProjectMessagesProps {
   selectedProject: string | null;
@@ -65,24 +56,7 @@ export function ProjectMessages({ selectedProject, messages, onMessageSent }: Pr
           </p>
         ) : (
           <div className="space-y-4">
-            <div className="h-[400px] overflow-y-auto space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className="p-3 rounded-lg bg-accent"
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-sm font-medium">
-                      {message.profiles?.email}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(message.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-sm">{message.content}</p>
-                </div>
-              ))}
-            </div>
+            <MessageList messages={messages} />
             <div className="space-y-2">
               <Textarea
                 placeholder="Type your message..."
