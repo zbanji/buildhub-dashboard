@@ -8,130 +8,86 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
-const mockProjects = [
-  {
-    id: "1",
-    name: "Riverside Apartments",
-    status: "In Progress",
-    progress: 65,
-    budget: "$2.5M",
-    completionDate: "Dec 2024",
-    milestones: [
-      {
-        id: "m1",
-        name: "Foundation",
-        status: "Completed",
-        progress: 100,
-        media: [
-          {
-            id: "media1",
-            type: "image" as const,
-            url: "https://images.unsplash.com/photo-1590579491624-f98f36d4c763?q=80&w=1000",
-          },
-          {
-            id: "media2",
-            type: "image" as const,
-            url: "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?q=80&w=1000",
-          }
-        ]
-      },
-      {
-        id: "m2",
-        name: "Structure",
-        status: "In Progress",
-        progress: 75,
-        media: [
-          {
-            id: "media3",
-            type: "image" as const,
-            url: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=1000",
-          }
-        ]
-      },
-      {
-        id: "m3",
-        name: "Interior",
-        status: "Not Started",
-        progress: 0
-      },
-    ],
-    updates: [
-      {
-        date: "2024-02-20",
-        title: "Foundation Work Complete",
-        description: "The foundation has been laid and inspected.",
-        image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-      },
-      {
-        date: "2024-02-19",
-        title: "Electrical Installation Started",
-        description: "Began installing electrical systems on the first floor.",
-        image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "Downtown Office Complex",
-    status: "Planning",
-    progress: 15,
-    budget: "$5M",
-    completionDate: "Jun 2025",
-    milestones: [
-      {
-        id: "m1",
-        name: "Planning",
-        status: "In Progress",
-        progress: 80,
-      },
-      {
-        id: "m2",
-        name: "Foundation",
-        status: "Not Started",
-        progress: 0,
-      },
-    ],
-    updates: [
-      {
-        date: "2024-02-18",
-        title: "Planning Phase",
-        description: "Initial planning and permits being processed.",
-      },
-    ],
-  },
-];
+interface Project {
+  id: string;
+  name: string;
+  status: string;
+  budget: number;
+  square_footage: number;
+  planned_completion: string;
+  completionDate: string;
+  squareFootage: string;
+  progress: number;
+  milestones: any[];
+  updates: any[];
+  project_media: {
+    id: string;
+    file_path: string;
+    file_type: string;
+    milestone_id: string | null;
+  }[];
+}
 
 export default function Index() {
-  const [selectedProject, setSelectedProject] = useState<typeof mockProjects[0] | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const checkUserAndSetProject = async () => {
+  const { data: projects = [] } = useQuery({
+    queryKey: ['client-projects'],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate('/client/login');
-        return;
+        return [];
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+      const { data: projectsData, error } = await supabase
+        .from('projects')
+        .select(`
+          *,
+          project_media (
+            id,
+            file_path,
+            file_type,
+            milestone_id
+          )
+        `)
+        .eq('client_id', user.id);
 
-      if (profile?.role === 'client' && !selectedProject && mockProjects.length > 0) {
-        setSelectedProject(mockProjects[0]);
+      if (error) {
+        toast({
+          title: "Error fetching projects",
+          description: error.message,
+          variant: "destructive",
+        });
+        return [];
       }
-    };
 
-    checkUserAndSetProject();
-  }, [navigate]);
+      return projectsData.map(project => ({
+        ...project,
+        completionDate: new Date(project.planned_completion).toLocaleDateString(),
+        squareFootage: `${project.square_footage.toLocaleString()}`,
+        progress: 0,
+        milestones: [],
+        updates: [],
+      }));
+    },
+  });
+
+  useEffect(() => {
+    if (!selectedProject && projects.length > 0) {
+      setSelectedProject(projects[0]);
+    }
+  }, [projects]);
 
   const ProjectsList = () => (
     <div className="divide-y">
-      {mockProjects.map((project) => (
+      {projects.map((project) => (
         <button
           key={project.id}
           onClick={() => setSelectedProject(project)}
