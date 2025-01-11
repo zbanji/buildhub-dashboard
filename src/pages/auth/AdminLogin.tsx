@@ -10,16 +10,8 @@ export default function AdminLogin() {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    // Check initial session
     const checkSession = async () => {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error("Session error:", sessionError);
-        setError("Failed to check authentication status");
-        return;
-      }
-
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")

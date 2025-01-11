@@ -10,24 +10,56 @@ export default function ClientLogin() {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", session.user.id)
-            .single();
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
 
-          if (profile?.role === "client") {
-            navigate("/");
-          } else {
-            setError("Access denied. This login is for clients only.");
-            await supabase.auth.signOut();
-          }
+        if (profileError) {
+          console.error("Profile error:", profileError);
+          setError("Failed to verify client status");
+          await supabase.auth.signOut();
+          return;
+        }
+
+        if (profile?.role === "client") {
+          navigate("/");
+        } else {
+          setError("Access denied. This login is for clients only.");
+          await supabase.auth.signOut();
         }
       }
-    );
+    };
+
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Profile error:", profileError);
+          setError("Failed to verify client status");
+          await supabase.auth.signOut();
+          return;
+        }
+
+        if (profile?.role === "client") {
+          navigate("/");
+        } else {
+          setError("Access denied. This login is for clients only.");
+          await supabase.auth.signOut();
+        }
+      }
+    });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
