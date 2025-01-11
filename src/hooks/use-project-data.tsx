@@ -22,6 +22,15 @@ export interface Message {
   profiles?: Profile | null;
 }
 
+export interface Milestone {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  progress: number;
+  planned_completion: string;
+}
+
 export function useProjectData(selectedProject: string | null) {
   const { toast } = useToast();
 
@@ -80,10 +89,31 @@ export function useProjectData(selectedProject: string | null) {
     }
   });
 
+  const { data: milestones = [], refetch: refetchMilestones } = useQuery({
+    queryKey: ['milestones', selectedProject],
+    enabled: !!selectedProject,
+    queryFn: async () => {
+      const { data: milestonesData, error } = await supabase
+        .from('project_milestones')
+        .select('*')
+        .eq('project_id', selectedProject)
+        .order('planned_completion', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching milestones:', error);
+        return [];
+      }
+
+      return milestonesData as Milestone[];
+    }
+  });
+
   return {
     projects,
     messages,
+    milestones,
     refetchMessages,
-    refetchProjects
+    refetchProjects,
+    refetchMilestones
   };
 }

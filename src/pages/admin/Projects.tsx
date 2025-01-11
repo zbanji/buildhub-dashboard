@@ -1,19 +1,15 @@
-import { Layout } from "@/components/Layout";
 import { useState } from "react";
+import { Layout } from "@/components/Layout";
 import { ProjectList } from "@/components/admin/projects/ProjectList";
-import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
 import { ProjectHeader } from "@/components/admin/projects/ProjectHeader";
 import { useProjectData } from "@/hooks/use-project-data";
 import { EditProjectDialog } from "@/components/admin/EditProjectDialog";
 import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
+import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
 
 export default function AdminProjects() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const { projects, messages, refetchMessages, refetchProjects } = useProjectData(selectedProject);
-
-  const handleProjectSelect = (projectId: string) => {
-    setSelectedProject(projectId);
-  };
 
   return (
     <Layout>
@@ -24,7 +20,8 @@ export default function AdminProjects() {
             <ProjectList
               projects={projects}
               selectedProject={selectedProject}
-              onProjectSelect={handleProjectSelect}
+              onProjectSelect={setSelectedProject}
+              onProjectUpdate={refetchProjects}
             />
           </div>
           <div className="space-y-6">
@@ -39,7 +36,6 @@ export default function AdminProjects() {
                     />
                     <ProjectUpdateDialog
                       projectId={selectedProject}
-                      milestones={[]} // We'll need to fetch milestones here
                       onUpdate={refetchProjects}
                     />
                   </div>

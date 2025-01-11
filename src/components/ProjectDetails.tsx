@@ -1,177 +1,135 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { MilestoneCard } from "./project/MilestoneCard";
 import { UpdatesCard } from "./project/UpdatesCard";
 import { MediaGallery } from "./project/MediaGallery";
+import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
+import { useProjectData } from "@/hooks/use-project-data";
 
 interface Milestone {
   id: string;
   name: string;
   status: string;
   progress: number;
-  media?: { type: 'image' | 'video'; url: string; id: string }[];
+  media: {
+    type: "video" | "image";
+    url: string;
+    id: string;
+  }[];
 }
 
 interface Update {
+  id: string;
   date: string;
-  title: string;
-  description: string;
-  image?: string;
+  content: string;
+  media?: {
+    type: "video" | "image";
+    url: string;
+    id: string;
+  }[];
+}
+
+interface Project {
+  id: string;
+  name: string;
+  status: string;
+  budget: number;
+  square_footage: number;
+  planned_completion: string;
+  completionDate: string;
+  squareFootage: string;
+  progress: number;
+  milestones: Milestone[];
+  updates: Update[];
+  project_media: {
+    id: string;
+    file_path: string;
+    file_type: string;
+    milestone_id: string | null;
+  }[];
 }
 
 interface ProjectDetailsProps {
-  project: {
-    id: string;
-    name: string;
-  };
+  project: Project;
 }
 
 export function ProjectDetails({ project }: ProjectDetailsProps) {
-  const [comments, setComments] = useState<{ [key: string]: string }>({});
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [updates, setUpdates] = useState<Update[]>([]);
-  const [media, setMedia] = useState<any[]>([]);
-  const { toast } = useToast();
+  const [selectedMilestone, setSelectedMilestone] = useState<string | null>(null);
+  const { messages, refetchMessages } = useProjectData(project.id);
 
-  useEffect(() => {
-    const fetchProjectData = async () => {
-      try {
-        // Fetch milestones
-        const { data: milestonesData, error: milestonesError } = await supabase
-          .from('project_milestones')
-          .select('*')
-          .eq('project_id', project.id);
+  const formattedMilestones: Milestone[] = project.milestones.map((milestone) => {
+    const milestoneMedia = project.project_media
+      .filter((media) => media.milestone_id === milestone.id)
+      .map((media) => ({
+        type: media.file_type as "video" | "image",
+        url: media.file_path,
+        id: media.id,
+      }));
 
-        if (milestonesError) throw milestonesError;
-
-        // Fetch updates (messages)
-        const { data: updatesData, error: updatesError } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('project_id', project.id)
-          .order('created_at', { ascending: false });
-
-        if (updatesError) throw updatesError;
-
-        // Fetch media
-        const { data: mediaData, error: mediaError } = await supabase
-          .from('project_media')
-          .select('*')
-          .eq('project_id', project.id);
-
-        if (mediaError) throw mediaError;
-
-        // Transform data with explicit type checking
-        const formattedMilestones: Milestone[] = milestonesData.map(m => ({
-          id: m.id,
-          name: m.name,
-          status: m.status,
-          progress: m.progress,
-          media: mediaData
-            .filter(media => media.milestone_id === m.id)
-            .map(media => ({
-              type: media.file_type.includes('image') ? 'image' as const : 'video' as const,
-              url: media.file_path,
-              id: media.id
-            }))
-        }));
-
-        const formattedUpdates = updatesData.map(u => ({
-          date: new Date(u.created_at).toLocaleDateString(),
-          title: 'Project Update',
-          description: u.content
-        }));
-
-        setMilestones(formattedMilestones);
-        setUpdates(formattedUpdates);
-        setMedia(mediaData);
-
-      } catch (error) {
-        console.error('Error fetching project data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load project data",
-          variant: "destructive",
-        });
-      }
+    return {
+      ...milestone,
+      media: milestoneMedia,
     };
-
-    if (project.id) {
-      fetchProjectData();
-    }
-  }, [project.id, toast]);
-
-  const handleCommentChange = (mediaId: string, value: string) => {
-    setComments(prev => ({ ...prev, [mediaId]: value }));
-  };
-
-  const handleCommentSubmit = async (mediaId: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to comment.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('media_comments')
-        .insert({
-          media_id: mediaId,
-          comment: comments[mediaId],
-          user_id: user.id
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Comment added successfully",
-      });
-
-      setComments(prev => ({ ...prev, [mediaId]: '' }));
-    } catch (error) {
-      console.error('Error submitting comment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add comment",
-        variant: "destructive",
-      });
-    }
-  };
+  });
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold">{project.name}</h2>
-      
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="media">Media Gallery</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <UpdatesCard updates={updates} />
-            <MilestoneCard milestones={milestones} />
+      <Card className="p-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold">{project.name}</h2>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant={project.status === "In Progress" ? "default" : "secondary"}>
+                {project.status}
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                Due {project.completionDate}
+              </span>
+            </div>
           </div>
-        </TabsContent>
+          <div className="flex flex-col items-end">
+            <span className="text-2xl font-bold">
+              ${project.budget.toLocaleString()}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              {project.squareFootage} sq ft
+            </span>
+          </div>
+        </div>
+        <div className="mt-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium">Overall Progress</span>
+            <span className="text-sm text-muted-foreground">
+              {project.progress}%
+            </span>
+          </div>
+          <Progress value={project.progress} className="h-2" />
+        </div>
+      </Card>
 
-        <TabsContent value="media">
-          <MediaGallery
-            milestones={milestones}
-            comments={comments}
-            onCommentChange={handleCommentChange}
-            onCommentSubmit={handleCommentSubmit}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <MilestoneCard
+            milestones={formattedMilestones}
+            selectedMilestone={selectedMilestone}
+            onMilestoneSelect={setSelectedMilestone}
           />
-        </TabsContent>
-      </Tabs>
+          <UpdatesCard updates={project.updates} />
+        </div>
+        <div className="space-y-6">
+          <MediaGallery
+            media={project.project_media}
+            selectedMilestone={selectedMilestone}
+          />
+          <ProjectMessages
+            selectedProject={project.id}
+            messages={messages}
+            onMessageSent={refetchMessages}
+          />
+        </div>
+      </div>
     </div>
   );
 }
