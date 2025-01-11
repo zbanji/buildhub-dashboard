@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { User } from '@supabase/supabase-js';
+import { useQuery } from "@tanstack/react-query";
 
 interface Project {
   id: string;
@@ -43,15 +44,33 @@ interface AdminUser extends User {
 }
 
 export default function AdminProjects() {
-  const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  const { data: projects = [], refetch: refetchProjects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const { data: projectsData, error } = await supabase
+        .from('projects')
+        .select('*, profiles(email)');
+
+      if (error) {
+        toast({
+          title: "Error fetching projects",
+          description: error.message,
+          variant: "destructive",
+        });
+        return [];
+      }
+
+      return projectsData.map(project => ({
+        ...project,
+        client_email: project.profiles?.email
+      }));
+    }
+  });
 
   useEffect(() => {
     if (selectedProject) {
@@ -59,32 +78,10 @@ export default function AdminProjects() {
     }
   }, [selectedProject]);
 
-  const fetchProjects = async () => {
-    const { data: projectsData, error } = await supabase
-      .from('projects')
-      .select('*');
-
-    if (error) {
-      console.error('Error fetching projects:', error);
-      return;
-    }
-
-    // Fetch client emails
-    const { data: usersResponse } = await supabase.auth.admin.listUsers();
-    const users = (usersResponse?.users || []) as AdminUser[];
-    
-    const projectsWithClientEmails = projectsData.map(project => ({
-      ...project,
-      client_email: users.find(user => user.id === project.client_id)?.email
-    }));
-
-    setProjects(projectsWithClientEmails);
-  };
-
   const fetchMessages = async (projectId: string) => {
     const { data: messagesData, error } = await supabase
       .from('messages')
-      .select('*')
+      .select('*, profiles(email)')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true });
 
@@ -93,13 +90,9 @@ export default function AdminProjects() {
       return;
     }
 
-    // Fetch sender emails
-    const { data: usersResponse } = await supabase.auth.admin.listUsers();
-    const users = (usersResponse?.users || []) as AdminUser[];
-    
     const messagesWithSenderEmails = messagesData.map(message => ({
       ...message,
-      sender_email: users.find(user => user.id === message.sender_id)?.email
+      sender_email: message.profiles?.email
     }));
 
     setMessages(messagesWithSenderEmails);
@@ -139,7 +132,7 @@ export default function AdminProjects() {
           <h1 className="text-3xl font-bold">Project Management</h1>
           <div className="flex flex-wrap items-center gap-4">
             <NewClientDialog />
-            <NewProjectDialog />
+            <NewProjectDialog onProjectCreated={refetchProjects} />
           </div>
         </div>
 
@@ -170,6 +163,7 @@ export default function AdminProjects() {
                       <ProjectUpdateDialog 
                         projectId={project.id} 
                         milestones={[]} 
+                        onProjectUpdated={refetchProjects}
                       />
                     </TableCell>
                   </TableRow>
