@@ -1,225 +1,127 @@
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Edit, Upload } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Milestone, Project } from "@/hooks/use-project-data";
+import { RefetchOptions, QueryObserverResult } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 
-interface ProjectUpdateDialogProps {
+export interface ProjectUpdateDialogProps {
   projectId: string;
-  milestones: { id: string; name: string }[];
-  onUpdate?: () => void;
+  milestones?: Milestone[];
+  onUpdate: (options?: RefetchOptions) => Promise<QueryObserverResult<Project[], Error>>;
 }
 
 export function ProjectUpdateDialog({ projectId, milestones = [], onUpdate }: ProjectUpdateDialogProps) {
-  const [selectedMilestone, setSelectedMilestone] = useState("");
-  const [completion, setCompletion] = useState("");
-  const [status, setStatus] = useState("");
-  const [notes, setNotes] = useState("");
-  const [mediaFiles, setMediaFiles] = useState<FileList | null>(null);
+  const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const [status, setStatus] = useState<string>("");
+  const [selectedMilestone, setSelectedMilestone] = useState<string>("");
+  const [progress, setProgress] = useState<number>(0);
 
-  const handleUpdateProject = async () => {
-    try {
-      if (!selectedMilestone) {
-        toast({
-          title: "Error",
-          description: "Please select a milestone",
-          variant: "destructive",
-        });
-        return;
-      }
+  const handleSubmit = async () => {
+    if (!status || !selectedMilestone) return;
 
-      const { error: milestoneError } = await supabase
-        .from('project_milestones')
-        .update({
-          status: status,
-          progress: parseInt(completion) || 0,
-        })
-        .eq('id', selectedMilestone);
+    const { error: projectError } = await supabase
+      .from('projects')
+      .update({ status })
+      .eq('id', projectId);
 
-      if (milestoneError) throw milestoneError;
-
-      if (notes) {
-        const { error: messageError } = await supabase
-          .from('messages')
-          .insert({
-            project_id: projectId,
-            content: notes,
-          });
-
-        if (messageError) throw messageError;
-      }
-
-      toast({
-        title: "Success",
-        description: "Project milestone updated successfully",
-      });
-
-      onUpdate?.();
-    } catch (error) {
-      console.error('Error updating project:', error);
+    if (projectError) {
       toast({
         title: "Error",
-        description: "Failed to update project",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleFileUpload = async () => {
-    if (!mediaFiles || mediaFiles.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select files to upload",
+        description: "Failed to update project status",
         variant: "destructive",
       });
       return;
     }
 
-    try {
-      for (const file of Array.from(mediaFiles)) {
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${projectId}/${Math.random()}.${fileExt}`;
+    const { error: milestoneError } = await supabase
+      .from('project_milestones')
+      .update({ progress })
+      .eq('id', selectedMilestone);
 
-        const { error: uploadError } = await supabase.storage
-          .from('project-media')
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        const { error: dbError } = await supabase
-          .from('project_media')
-          .insert({
-            project_id: projectId,
-            milestone_id: selectedMilestone || null,
-            file_path: filePath,
-            file_type: file.type,
-          });
-
-        if (dbError) throw dbError;
-      }
-
-      toast({
-        title: "Success",
-        description: "Files uploaded successfully",
-      });
-
-      onUpdate?.();
-    } catch (error) {
-      console.error('Error uploading files:', error);
+    if (milestoneError) {
       toast({
         title: "Error",
-        description: "Failed to upload files",
+        description: "Failed to update milestone progress",
         variant: "destructive",
       });
+      return;
     }
+
+    toast({
+      title: "Success",
+      description: "Project status updated successfully",
+    });
+
+    onUpdate();
+    setOpen(false);
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <Edit className="mr-2 h-4 w-4" />
-              Update Milestone
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[625px]">
-            <DialogHeader>
-              <DialogTitle>Update Project Milestone</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <Select value={selectedMilestone} onValueChange={setSelectedMilestone}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Milestone" />
-                </SelectTrigger>
-                <SelectContent>
-                  {milestones.map((milestone) => (
-                    <SelectItem key={milestone.id} value={milestone.id}>
-                      {milestone.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                placeholder="Milestone Completion %"
-                value={completion}
-                onChange={(e) => setCompletion(e.target.value)}
-              />
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Milestone Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="delayed">Delayed</SelectItem>
-                </SelectContent>
-              </Select>
-              <Textarea 
-                placeholder="Update Notes" 
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-            <div className="flex justify-end">
-              <Button onClick={handleUpdateProject}>Save Update</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="w-full">
+          Update Status
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Update Project Status</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Project Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="planning">Planning</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="review">Review</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <Upload className="mr-2 h-4 w-4" />
-              Upload Media
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Upload Media Files</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Select value={selectedMilestone} onValueChange={setSelectedMilestone}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Milestone" />
-                </SelectTrigger>
-                <SelectContent>
-                  {milestones.map((milestone) => (
-                    <SelectItem key={milestone.id} value={milestone.id}>
-                      {milestone.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                type="file"
-                accept="image/*,video/*"
-                onChange={(e) => setMediaFiles(e.target.files)}
-                multiple
+          <div className="space-y-2">
+            <Label>Update Milestone Progress</Label>
+            <Select value={selectedMilestone} onValueChange={setSelectedMilestone}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select milestone" />
+              </SelectTrigger>
+              <SelectContent>
+                {milestones.map((milestone) => (
+                  <SelectItem key={milestone.id} value={milestone.id}>
+                    {milestone.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedMilestone && (
+            <div className="space-y-2">
+              <Label>Progress: {progress}%</Label>
+              <Slider
+                value={[progress]}
+                onValueChange={([value]) => setProgress(value)}
+                max={100}
+                step={1}
               />
             </div>
-            <div className="flex justify-end">
-              <Button onClick={handleFileUpload}>Upload Files</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
+          )}
+
+          <Button onClick={handleSubmit} className="w-full">
+            Update Project
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

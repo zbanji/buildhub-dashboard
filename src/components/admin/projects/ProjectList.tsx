@@ -1,58 +1,41 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Project } from "@/hooks/use-project-data";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RefetchOptions, QueryObserverResult } from "@tanstack/react-query";
+import { Dispatch, SetStateAction } from "react";
 
-interface Profile {
-  email: string | null;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  status: string;
-  client_id: string;
-  profiles?: Profile | null;
-  budget: number;
-}
-
-interface ProjectListProps {
+export interface ProjectListProps {
   projects: Project[];
   selectedProject: string | null;
-  onProjectSelect: (projectId: string) => void;
+  onProjectSelect: Dispatch<SetStateAction<string | null>>;
+  onProjectUpdate?: (options?: RefetchOptions) => Promise<QueryObserverResult<Project[], Error>>;
 }
 
-export function ProjectList({ projects, selectedProject, onProjectSelect }: ProjectListProps) {
+export function ProjectList({ 
+  projects, 
+  selectedProject, 
+  onProjectSelect,
+  onProjectUpdate 
+}: ProjectListProps) {
   return (
-    <div className="rounded-lg border bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Project Name</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Budget</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+    <Card>
+      <CardHeader>
+        <CardTitle>Projects</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
           {projects.map((project) => (
-            <TableRow 
+            <Button
               key={project.id}
-              className={`cursor-pointer ${selectedProject === project.id ? 'bg-accent' : ''}`}
+              variant={selectedProject === project.id ? "default" : "outline"}
+              className="w-full justify-start"
               onClick={() => onProjectSelect(project.id)}
             >
-              <TableCell className="font-medium">{project.name}</TableCell>
-              <TableCell>{project.profiles?.email}</TableCell>
-              <TableCell>{project.status}</TableCell>
-              <TableCell>${project.budget.toLocaleString()}</TableCell>
-            </TableRow>
+              {project.name}
+            </Button>
           ))}
-        </TableBody>
-      </Table>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
