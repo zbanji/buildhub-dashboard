@@ -10,14 +10,56 @@ export default function AdminLogin() {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
+    // Check initial session
+    const checkSession = async () => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Session error:", sessionError);
+        setError("Failed to check authentication status");
+        return;
+      }
+
+      if (session?.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Profile error:", profileError);
+          setError("Failed to verify admin status");
+          await supabase.auth.signOut();
+          return;
+        }
+
+        if (profile?.role === "admin") {
+          navigate("/admin/projects");
+        } else {
+          setError("Access denied. This login is for administrators only.");
+          await supabase.auth.signOut();
+        }
+      }
+    };
+
+    checkSession();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session) {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("role")
             .eq("id", session.user.id)
             .single();
+
+          if (profileError) {
+            console.error("Profile error:", profileError);
+            setError("Failed to verify admin status");
+            await supabase.auth.signOut();
+            return;
+          }
 
           if (profile?.role === "admin") {
             navigate("/admin/projects");
