@@ -14,6 +14,9 @@ export default function ClientLogin() {
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // Clear any existing session first
+        await supabase.auth.signOut();
+        
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
@@ -40,6 +43,7 @@ export default function ClientLogin() {
       } catch (err) {
         console.error("Session check error:", err);
         setError("An error occurred while verifying your status.");
+        await supabase.auth.signOut();
       } finally {
         setIsLoading(false);
       }
@@ -80,7 +84,9 @@ export default function ClientLogin() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   if (isLoading) {
