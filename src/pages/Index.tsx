@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { ProjectDetails } from "@/components/ProjectDetails";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const mockProjects = [
   {
@@ -103,6 +105,29 @@ const mockProjects = [
 export default function Index() {
   const [selectedProject, setSelectedProject] = useState<typeof mockProjects[0] | null>(null);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkUserAndSetProject = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/client/login');
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role === 'client' && !selectedProject && mockProjects.length > 0) {
+        setSelectedProject(mockProjects[0]);
+      }
+    };
+
+    checkUserAndSetProject();
+  }, [navigate]);
 
   const ProjectsList = () => (
     <div className="divide-y">

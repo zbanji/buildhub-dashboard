@@ -17,6 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -24,11 +25,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        setUserRole(profile?.role || null);
+      }
     };
     getUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
       setUser(session?.user || null);
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        setUserRole(profile?.role || null);
+      } else {
+        setUserRole(null);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -36,7 +55,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate('/');
+    // Redirect based on user role
+    if (userRole === 'admin') {
+      navigate('/admin/login');
+    } else {
+      navigate('/client/login');
+    }
   };
 
   const UserMenu = () => (
@@ -82,7 +106,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <SheetContent side="left" className="w-[300px] sm:w-[400px]">
                   <nav className="flex flex-col gap-4">
                     <h2 className="text-lg font-semibold">Menu</h2>
-                    {/* Add your mobile navigation items here */}
                   </nav>
                 </SheetContent>
               </Sheet>
