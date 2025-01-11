@@ -11,9 +11,11 @@ interface Milestone {
 
 interface MilestoneCardProps {
   milestones: Milestone[];
+  selectedMilestone: string | null;
+  onMilestoneSelect: (id: string | null) => void;
 }
 
-export function MilestoneCard({ milestones }: MilestoneCardProps) {
+export function MilestoneCard({ milestones, selectedMilestone, onMilestoneSelect }: MilestoneCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -22,7 +24,11 @@ export function MilestoneCard({ milestones }: MilestoneCardProps) {
       <CardContent>
         <div className="space-y-8">
           {milestones.map((milestone) => (
-            <div key={milestone.id} className="space-y-4">
+            <div 
+              key={milestone.id} 
+              className={`space-y-4 cursor-pointer ${selectedMilestone === milestone.id ? 'bg-accent/10 p-4 rounded-lg' : ''}`}
+              onClick={() => onMilestoneSelect(milestone.id === selectedMilestone ? null : milestone.id)}
+            >
               <div className="flex justify-between items-center">
                 <h3 className="font-medium">{milestone.name}</h3>
                 <span className="text-sm text-muted-foreground">

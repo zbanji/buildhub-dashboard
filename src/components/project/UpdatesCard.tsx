@@ -2,10 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 interface Update {
+  id: string;
   date: string;
-  title: string;
-  description: string;
-  image?: string;
+  content: string;
+  media?: {
+    type: "video" | "image";
+    url: string;
+    id: string;
+  }[];
 }
 
 interface UpdatesCardProps {
@@ -20,20 +24,31 @@ export function UpdatesCard({ updates }: UpdatesCardProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {updates.map((update, index) => (
-            <div key={index} className="space-y-2">
+          {updates.map((update) => (
+            <div key={update.id} className="space-y-2">
               <div className="flex justify-between items-start">
-                <h3 className="font-medium">{update.title}</h3>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">{update.content}</p>
+                </div>
                 <span className="text-sm text-muted-foreground">{update.date}</span>
               </div>
-              <p className="text-sm text-muted-foreground">{update.description}</p>
-              {update.image && (
-                <img 
-                  src={update.image} 
-                  alt={update.title}
-                  className="rounded-md mt-2 max-h-48 object-cover"
-                />
-              )}
+              {update.media?.map((media) => (
+                <div key={media.id} className="mt-2">
+                  {media.type === 'image' ? (
+                    <img 
+                      src={media.url} 
+                      alt="Update media"
+                      className="rounded-md mt-2 max-h-48 object-cover"
+                    />
+                  ) : (
+                    <video 
+                      src={media.url} 
+                      controls
+                      className="rounded-md mt-2 w-full"
+                    />
+                  )}
+                </div>
+              ))}
               <Separator className="mt-4" />
             </div>
           ))}

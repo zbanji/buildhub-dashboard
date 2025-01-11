@@ -120,7 +120,7 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
         </div>
         <div className="space-y-6">
           <MediaGallery
-            media={project.project_media}
+            projectMedia={project.project_media}
             selectedMilestone={selectedMilestone}
           />
           <ProjectMessages

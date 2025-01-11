@@ -2,62 +2,51 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { MediaGalleryItem } from "./MediaGalleryItem";
 
-interface Media {
-  type: 'image' | 'video';
-  url: string;
+interface ProjectMedia {
   id: string;
-}
-
-interface Milestone {
-  id: string;
-  name: string;
-  media?: Media[];
+  file_path: string;
+  file_type: string;
+  milestone_id: string | null;
 }
 
 interface MediaGalleryProps {
-  milestones: Milestone[];
-  comments: { [key: string]: string };
-  onCommentChange: (id: string, value: string) => void;
-  onCommentSubmit: (id: string) => void;
+  projectMedia: ProjectMedia[];
+  selectedMilestone: string | null;
 }
 
-export function MediaGallery({ 
-  milestones, 
-  comments, 
-  onCommentChange, 
-  onCommentSubmit 
-}: MediaGalleryProps) {
+export function MediaGallery({ projectMedia, selectedMilestone }: MediaGalleryProps) {
+  const filteredMedia = selectedMilestone
+    ? projectMedia.filter(media => media.milestone_id === selectedMilestone)
+    : projectMedia;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Project Media Gallery</CardTitle>
       </CardHeader>
       <CardContent>
-        {milestones.map((milestone) => (
-          <div key={milestone.id} className="mb-8">
-            <h3 className="text-lg font-medium mb-4">{milestone.name}</h3>
-            {milestone.media && milestone.media.length > 0 ? (
-              <div className="space-y-8">
-                {milestone.media.map((item, index) => (
-                  <MediaGalleryItem
-                    key={item.id}
-                    item={item}
-                    index={index}
-                    milestoneName={milestone.name}
-                    comment={comments[item.id] || ''}
-                    onCommentChange={onCommentChange}
-                    onCommentSubmit={onCommentSubmit}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No media available for this milestone.
-              </p>
-            )}
-            <Separator className="mt-6" />
-          </div>
-        ))}
+        <div className="space-y-8">
+          {filteredMedia.map((media, index) => (
+            <MediaGalleryItem
+              key={media.id}
+              item={{
+                type: media.file_type as "image" | "video",
+                url: media.file_path,
+                id: media.id
+              }}
+              index={index}
+              milestoneName={selectedMilestone || "Project"}
+              comment=""
+              onCommentChange={() => {}}
+              onCommentSubmit={() => {}}
+            />
+          ))}
+          {filteredMedia.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No media available {selectedMilestone ? "for this milestone" : ""}.
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
