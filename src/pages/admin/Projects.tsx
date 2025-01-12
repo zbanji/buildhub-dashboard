@@ -6,12 +6,13 @@ import { useProjects, useProjectMessages, useProjectMilestones } from "@/hooks/u
 import { EditProjectDialog } from "@/components/admin/EditProjectDialog";
 import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
 import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
+import { UploadMediaButton } from "@/components/admin/projects/UploadMediaButton";
 
 export default function AdminProjects() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const { data: projects, refetch: refetchProjects } = useProjects();
   const { data: messages, refetch: refetchMessages } = useProjectMessages(selectedProject);
-  const { data: milestones } = useProjectMilestones(selectedProject);
+  const { data: milestones, refetch: refetchMilestones } = useProjectMilestones(selectedProject);
 
   return (
     <Layout>
@@ -40,6 +41,11 @@ export default function AdminProjects() {
                       projectId={selectedProject}
                       milestones={milestones || []}
                       onUpdate={refetchProjects}
+                    />
+                    <UploadMediaButton
+                      projectId={selectedProject}
+                      milestoneId={null}
+                      onUploadComplete={refetchMilestones}
                     />
                   </div>
                 </div>

@@ -8,17 +8,16 @@ interface MessageListProps {
 
 export function MessageList({ messages }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    scrollToBottom();
+    if (containerRef.current && messagesEndRef.current) {
+      containerRef.current.scrollTop = messagesEndRef.current.offsetTop;
+    }
   }, [messages]);
 
   return (
-    <div className="h-[400px] overflow-y-auto space-y-4 px-4">
+    <div ref={containerRef} className="h-[400px] overflow-y-auto space-y-4 px-4">
       {messages.map((message) => {
         const isAdmin = message.profiles?.role === 'admin';
         
@@ -44,7 +43,7 @@ export function MessageList({ messages }: MessageListProps) {
                   "flex gap-2 text-xs mt-2",
                   isAdmin ? "text-gray-300" : "text-gray-600"
                 )}>
-                  <span className="font-semibold">
+                  <span className="font-bold">
                     {message.profiles?.email}
                   </span>
                   <span>•</span>
