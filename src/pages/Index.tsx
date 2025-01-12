@@ -3,7 +3,7 @@ import { Layout } from "@/components/Layout";
 import { ProjectDetails } from "@/components/ProjectDetails";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +45,7 @@ interface Project {
 
 export default function Index() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -109,7 +110,12 @@ export default function Index() {
       {projects.map((project) => (
         <button
           key={project.id}
-          onClick={() => setSelectedProject(project)}
+          onClick={() => {
+            setSelectedProject(project);
+            if (isMobile) {
+              setSheetOpen(false);
+            }
+          }}
           className={`w-full text-left p-4 hover:bg-accent transition-colors ${
             selectedProject?.id === project.id ? "bg-accent" : ""
           }`}
@@ -132,7 +138,7 @@ export default function Index() {
     return (
       <Layout>
         <div className="h-[calc(100vh-4rem)]">
-          <Sheet>
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" className="mb-4 w-full flex items-center gap-2">
                 <Menu className="h-4 w-4" />
