@@ -73,9 +73,7 @@ export function useProjectData(selectedProject: string | null) {
           id,
           content,
           created_at,
-          profiles!messages_sender_id_fkey (
-            email
-          )
+          sender:profiles(email)
         `)
         .eq('project_id', selectedProject)
         .order('created_at', { ascending: true });
