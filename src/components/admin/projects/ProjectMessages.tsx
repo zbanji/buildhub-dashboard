@@ -45,18 +45,20 @@ export function ProjectMessages({ selectedProject, messages, onMessageSent }: Pr
   };
 
   return (
-    <Card>
+    <Card className="flex flex-col h-[600px]">
       <CardHeader>
         <CardTitle>Project Messages</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col">
         {!selectedProject ? (
           <p className="text-muted-foreground text-center py-4">
             Select a project to view messages
           </p>
         ) : (
-          <div className="space-y-4">
-            <MessageList messages={messages} />
+          <div className="space-y-4 flex-1 flex flex-col">
+            <div className="flex-1 overflow-hidden">
+              <MessageList messages={messages} />
+            </div>
             <div className="space-y-2">
               <Textarea
                 placeholder="Type your message..."
