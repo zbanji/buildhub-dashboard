@@ -60,7 +60,8 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
           content,
           created_at,
           profiles!messages_sender_id_fkey (
-            email
+            email,
+            role
           )
         `)
         .eq('project_id', project.id)
