@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MilestoneForm } from "./project/MilestoneForm";
 
 interface ProjectMilestone {
+  id?: string;
   name: string;
   description: string;
   plannedCompletion: string;
@@ -33,6 +34,7 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
   const [plannedCompletion, setPlannedCompletion] = useState("");
   const [description, setDescription] = useState("");
   const [milestones, setMilestones] = useState<ProjectMilestone[]>([]);
+  const [existingMilestoneIds, setExistingMilestoneIds] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,11 +66,15 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
       setPlannedCompletion(project.planned_completion);
       setDescription(project.description || "");
       
-      setMilestones(milestonesData.map(m => ({
+      const formattedMilestones = milestonesData.map(m => ({
+        id: m.id,
         name: m.name,
         description: m.description || "",
         plannedCompletion: m.planned_completion
-      })));
+      }));
+      
+      setMilestones(formattedMilestones);
+      setExistingMilestoneIds(milestonesData.map(m => m.id));
     } catch (error) {
       console.error('Error fetching project details:', error);
       toast({
@@ -81,6 +87,7 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
 
   const handleSubmit = async () => {
     try {
+      // Update project details
       const { error: projectError } = await supabase
         .from('projects')
         .update({
@@ -94,19 +101,53 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
 
       if (projectError) throw projectError;
 
-      // Update milestones
-      const { error: milestonesError } = await supabase
-        .from('project_milestones')
-        .upsert(
-          milestones.map(milestone => ({
-            project_id: projectId,
-            name: milestone.name,
-            description: milestone.description,
-            planned_completion: milestone.plannedCompletion,
-          }))
-        );
+      // Get current milestone IDs from the form
+      const currentMilestoneIds = milestones
+        .filter(m => m.id)
+        .map(m => m.id as string);
 
-      if (milestonesError) throw milestonesError;
+      // Delete removed milestones
+      const milestonesToDelete = existingMilestoneIds.filter(
+        id => !currentMilestoneIds.includes(id)
+      );
+
+      if (milestonesToDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('project_milestones')
+          .delete()
+          .in('id', milestonesToDelete);
+
+        if (deleteError) throw deleteError;
+      }
+
+      // Update existing and insert new milestones
+      for (const milestone of milestones) {
+        if (milestone.id) {
+          // Update existing milestone
+          const { error: updateError } = await supabase
+            .from('project_milestones')
+            .update({
+              name: milestone.name,
+              description: milestone.description,
+              planned_completion: milestone.plannedCompletion,
+            })
+            .eq('id', milestone.id);
+
+          if (updateError) throw updateError;
+        } else {
+          // Insert new milestone
+          const { error: insertError } = await supabase
+            .from('project_milestones')
+            .insert({
+              project_id: projectId,
+              name: milestone.name,
+              description: milestone.description,
+              planned_completion: milestone.plannedCompletion,
+            });
+
+          if (insertError) throw insertError;
+        }
+      }
 
       toast({
         title: "Success",
