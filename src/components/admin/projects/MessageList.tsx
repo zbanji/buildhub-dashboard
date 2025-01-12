@@ -1,4 +1,4 @@
-import { Message } from "@/hooks/use-project-data";
+import { Message } from "@/types/project";
 import { cn } from "@/lib/utils";
 
 interface MessageListProps {
@@ -26,15 +26,15 @@ export function MessageList({ messages }: MessageListProps) {
                 <span className="text-sm font-medium">
                   {message.profiles?.email}
                 </span>
+                <span className={cn(
+                  "text-xs",
+                  isAdmin ? "text-gray-300" : "text-gray-600"
+                )}>
+                  {new Date(message.created_at).toLocaleDateString()}
+                </span>
               </div>
-              <span className={cn(
-                "text-xs",
-                isAdmin ? "text-gray-300" : "text-gray-600"
-              )}>
-                {new Date(message.created_at).toLocaleDateString()}
-              </span>
             </div>
-            <p className="text-sm">{message.content}</p>
+            <p className="text-sm mt-2">{message.content}</p>
           </div>
         );
       })}
