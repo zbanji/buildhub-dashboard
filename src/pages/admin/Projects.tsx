@@ -44,7 +44,6 @@ export default function AdminProjects() {
                     />
                     <UploadMediaButton
                       projectId={selectedProject}
-                      milestoneId={null}
                       onUploadComplete={refetchMilestones}
                     />
                   </div>
