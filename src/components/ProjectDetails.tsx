@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MilestoneCard } from "@/components/project/MilestoneCard";
 import { MediaGallery } from "@/components/project/MediaGallery";
-import { useState } from "react";
+import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,7 +32,7 @@ interface ProjectDetailsProps {
 export function ProjectDetails({ project }: ProjectDetailsProps) {
   const [selectedMilestone, setSelectedMilestone] = useState<string | null>(null);
 
-  const { data: milestones = [] } = useQuery({
+  const { data: milestones = [], refetch: refetchMilestones } = useQuery({
     queryKey: ['project-milestones', project.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -48,6 +49,37 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
       return data;
     }
   });
+
+  const { data: messages = [], refetch: refetchMessages } = useQuery({
+    queryKey: ['project-messages', project.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select(`
+          id,
+          content,
+          created_at,
+          profiles!messages_sender_id_fkey (
+            email
+          )
+        `)
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching messages:', error);
+        return [];
+      }
+
+      return data;
+    }
+  });
+
+  useEffect(() => {
+    if (milestones.length > 0 && !selectedMilestone) {
+      setSelectedMilestone(milestones[0].id);
+    }
+  }, [milestones, selectedMilestone]);
 
   const selectedMilestoneDetails = milestones.find(m => m.id === selectedMilestone);
 
@@ -99,6 +131,13 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
             selectedMilestone={selectedMilestone}
             milestoneName={selectedMilestoneDetails?.name}
           />
+          <div className="mt-8">
+            <ProjectMessages
+              selectedProject={project.id}
+              messages={messages}
+              onMessageSent={refetchMessages}
+            />
+          </div>
         </div>
       </div>
     </div>
