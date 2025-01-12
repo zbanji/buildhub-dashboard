@@ -26,9 +26,19 @@ export function AuthForm({ title, error }: AuthFormProps) {
         )}
         <Auth
           supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
+          appearance={{ 
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#2563eb',
+                  brandAccent: '#1d4ed8',
+                }
+              }
+            }
+          }}
           providers={[]}
-          redirectTo={baseUrl}
+          redirectTo={`${baseUrl}/client`}
         />
       </div>
     </div>
