@@ -148,7 +148,7 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
           Edit Project
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Project</DialogTitle>
         </DialogHeader>
@@ -193,7 +193,7 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
             onUpdate={updateMilestone}
           />
         </div>
-        <div className="flex justify-end">
+        <div className="flex justify-end sticky bottom-0 bg-background py-4 border-t">
           <Button onClick={handleSubmit}>Save Changes</Button>
         </div>
       </DialogContent>
