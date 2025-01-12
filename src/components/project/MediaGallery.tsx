@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MediaGalleryItem } from "./MediaGalleryItem";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProjectMedia {
   id: string;
@@ -20,10 +21,12 @@ export function MediaGallery({ projectMedia, selectedMilestone, milestoneName }:
     ? projectMedia.filter(media => media.milestone_id === selectedMilestone)
     : projectMedia;
 
-  // Function to get the full URL from Supabase storage URL
-  const getFullUrl = (url: string) => {
-    if (url.startsWith('http')) return url;
-    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/project-media/${url}`;
+  const getMediaUrl = async (filePath: string) => {
+    const { data } = supabase.storage
+      .from('project-media')
+      .getPublicUrl(filePath);
+    
+    return data.publicUrl;
   };
 
   return (
@@ -45,7 +48,7 @@ export function MediaGallery({ projectMedia, selectedMilestone, milestoneName }:
                   <MediaGalleryItem
                     item={{
                       type: media.file_type as "image" | "video",
-                      url: getFullUrl(media.file_path),
+                      url: getMediaUrl(media.file_path),
                       id: media.id
                     }}
                     index={index}
