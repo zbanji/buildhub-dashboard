@@ -70,9 +70,7 @@ export default function ClientLogin() {
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [navigate, toast]);
 
   if (isLoading) {
@@ -82,6 +80,9 @@ export default function ClientLogin() {
       </div>
     );
   }
+
+  // Get the current URL without any path
+  const baseUrl = window.location.origin;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -100,7 +101,7 @@ export default function ClientLogin() {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           providers={[]}
-          redirectTo={window.location.origin}
+          redirectTo={baseUrl}
         />
       </div>
     </div>
