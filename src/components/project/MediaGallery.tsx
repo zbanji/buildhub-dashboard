@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MediaGalleryItem } from "./MediaGalleryItem";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 interface ProjectMedia {
   id: string;
@@ -24,25 +25,31 @@ export function MediaGallery({ projectMedia, selectedMilestone }: MediaGalleryPr
         <CardTitle>Project Media Gallery</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-8">
-          {filteredMedia.map((media, index) => (
-            <MediaGalleryItem
-              key={media.id}
-              item={{
-                type: media.file_type as "image" | "video",
-                url: media.file_path,
-                id: media.id
-              }}
-              index={index}
-              milestoneName={selectedMilestone || "Project"}
-            />
-          ))}
-          {filteredMedia.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              No media available {selectedMilestone ? "for this milestone" : ""}.
-            </p>
-          )}
-        </div>
+        {filteredMedia.length > 0 ? (
+          <Carousel className="w-full max-w-4xl mx-auto">
+            <CarouselContent>
+              {filteredMedia.map((media, index) => (
+                <CarouselItem key={media.id}>
+                  <MediaGalleryItem
+                    item={{
+                      type: media.file_type as "image" | "video",
+                      url: media.file_path,
+                      id: media.id
+                    }}
+                    index={index}
+                    milestoneName={selectedMilestone || "Project"}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No media available {selectedMilestone ? "for this milestone" : ""}.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
