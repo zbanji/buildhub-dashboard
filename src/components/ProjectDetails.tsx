@@ -49,6 +49,8 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
     }
   });
 
+  const selectedMilestoneDetails = milestones.find(m => m.id === selectedMilestone);
+
   return (
     <div className="space-y-8">
       <Card>
@@ -84,17 +86,18 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-        <div className="md:col-span-7">
-          <MediaGallery
-            projectMedia={project.project_media}
-            selectedMilestone={selectedMilestone}
-          />
-        </div>
         <div className="md:col-span-5">
           <MilestoneCard
             milestones={milestones}
             onMilestoneSelect={setSelectedMilestone}
             selectedMilestone={selectedMilestone}
+          />
+        </div>
+        <div className="md:col-span-7">
+          <MediaGallery
+            projectMedia={project.project_media}
+            selectedMilestone={selectedMilestone}
+            milestoneName={selectedMilestoneDetails?.name}
           />
         </div>
       </div>

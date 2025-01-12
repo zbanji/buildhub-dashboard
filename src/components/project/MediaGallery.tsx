@@ -12,9 +12,10 @@ interface ProjectMedia {
 interface MediaGalleryProps {
   projectMedia: ProjectMedia[];
   selectedMilestone: string | null;
+  milestoneName?: string;
 }
 
-export function MediaGallery({ projectMedia, selectedMilestone }: MediaGalleryProps) {
+export function MediaGallery({ projectMedia, selectedMilestone, milestoneName }: MediaGalleryProps) {
   const filteredMedia = selectedMilestone
     ? projectMedia.filter(media => media.milestone_id === selectedMilestone)
     : projectMedia;
@@ -23,6 +24,11 @@ export function MediaGallery({ projectMedia, selectedMilestone }: MediaGalleryPr
     <Card>
       <CardHeader>
         <CardTitle>Project Media Gallery</CardTitle>
+        {milestoneName && (
+          <p className="text-sm text-muted-foreground">
+            Viewing: {milestoneName}
+          </p>
+        )}
       </CardHeader>
       <CardContent>
         {filteredMedia.length > 0 ? (
@@ -37,7 +43,7 @@ export function MediaGallery({ projectMedia, selectedMilestone }: MediaGalleryPr
                       id: media.id
                     }}
                     index={index}
-                    milestoneName={selectedMilestone || "Project"}
+                    milestoneName={milestoneName || "Project"}
                   />
                 </CarouselItem>
               ))}
