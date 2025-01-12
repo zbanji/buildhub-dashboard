@@ -45,11 +45,11 @@ export function ProjectMessages({ selectedProject, messages, onMessageSent }: Pr
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-full">
+      <CardHeader className="pb-4">
         <CardTitle>Project Messages</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         {!selectedProject ? (
           <p className="text-muted-foreground text-center py-4">
             Select a project to view messages
@@ -62,6 +62,7 @@ export function ProjectMessages({ selectedProject, messages, onMessageSent }: Pr
                 placeholder="Type your message..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
+                className="min-h-[80px] resize-none"
               />
               <Button 
                 className="w-full" 

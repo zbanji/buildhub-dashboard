@@ -14,10 +14,10 @@ export function ProjectOverview({ status, budget, squareFootage, completionDate 
         <CardTitle>Project Overview</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <p className="text-sm font-medium">Status</p>
-            <p className="text-sm text-muted-foreground">{status}</p>
+            <p className="text-sm text-muted-foreground break-words">{status}</p>
           </div>
           <div>
             <p className="text-sm font-medium">Budget</p>
