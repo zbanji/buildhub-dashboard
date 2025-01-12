@@ -15,14 +15,26 @@ export default function ClientLogin() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const checkSession = async () => {
+    const cleanupSession = async () => {
       try {
-        // Clear any existing session first
-        const { error: sessionError } = await supabase.auth.signOut();
-        if (sessionError) throw sessionError;
+        setIsLoading(true);
+        // Sign out from Supabase
+        await supabase.auth.signOut();
         
-        // Clear local storage to ensure no stale tokens remain
-        localStorage.removeItem('supabase.auth.token');
+        // Clear all local storage data
+        localStorage.clear();
+        
+        // Clear any cached data
+        if ('caches' in window) {
+          try {
+            const cacheNames = await caches.keys();
+            await Promise.all(
+              cacheNames.map(cacheName => caches.delete(cacheName))
+            );
+          } catch (e) {
+            console.error('Cache cleanup error:', e);
+          }
+        }
         
         setIsLoading(false);
       } catch (err) {
@@ -32,7 +44,7 @@ export default function ClientLogin() {
       }
     };
 
-    checkSession();
+    cleanupSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
@@ -62,7 +74,6 @@ export default function ClientLogin() {
         } catch (err) {
           console.error("Authentication error:", err);
           setError(err instanceof Error ? err.message : "Error verifying user role. Please try again.");
-          // Sign out on error to clean up any invalid session state
           await supabase.auth.signOut();
         } finally {
           setIsLoading(false);
