@@ -21,13 +21,25 @@ interface Project {
   completionDate: string;
   squareFootage: string;
   progress: number;
-  milestones: any[];
-  updates: any[];
+  milestones: {
+    id: string;
+    name: string;
+    status: string;
+    progress: number;
+    planned_completion: string;
+  }[];
   project_media: {
     id: string;
     file_path: string;
     file_type: string;
     milestone_id: string | null;
+  }[];
+  project_milestones?: {
+    id: string;
+    name: string;
+    status: string;
+    progress: number;
+    planned_completion: string;
   }[];
 }
 
@@ -81,7 +93,8 @@ export default function Index() {
         squareFootage: `${project.square_footage.toLocaleString()}`,
         progress: project.project_milestones?.[0]?.progress || 0,
         milestones: project.project_milestones || [],
-      }));
+        project_media: project.project_media || [],
+      })) as Project[];
     },
   });
 
