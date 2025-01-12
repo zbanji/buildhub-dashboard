@@ -20,11 +20,20 @@ export function MediaGalleryItem({
 }: MediaGalleryItemProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Get the file type from the URL extension
+  const getFileType = (url: string) => {
+    const extension = url.split('.').pop()?.toLowerCase();
+    if (extension === 'mp4' || extension === 'mov' || extension === 'webm') return 'video';
+    return 'image';
+  };
+
+  const fileType = getFileType(item.url);
+
   return (
     <>
       <div className="space-y-4">
-        <div className="relative aspect-video cursor-pointer" onClick={() => item.type === 'image' && setIsOpen(true)}>
-          {item.type === 'image' ? (
+        <div className="relative aspect-video cursor-pointer" onClick={() => fileType === 'image' && setIsOpen(true)}>
+          {fileType === 'image' ? (
             <img
               src={item.url}
               alt={`${milestoneName} media ${index + 1}`}
@@ -34,8 +43,12 @@ export function MediaGalleryItem({
             <video
               src={item.url}
               controls
-              className="rounded-md w-full h-full"
-            />
+              className="rounded-md w-full h-full object-cover"
+              controlsList="nodownload"
+              preload="metadata"
+            >
+              Your browser does not support the video tag.
+            </video>
           )}
         </div>
       </div>

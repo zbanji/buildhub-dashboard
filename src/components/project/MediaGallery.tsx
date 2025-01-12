@@ -20,6 +20,12 @@ export function MediaGallery({ projectMedia, selectedMilestone, milestoneName }:
     ? projectMedia.filter(media => media.milestone_id === selectedMilestone)
     : projectMedia;
 
+  // Function to get the full URL from Supabase storage URL
+  const getFullUrl = (url: string) => {
+    if (url.startsWith('http')) return url;
+    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/project-media/${url}`;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -39,7 +45,7 @@ export function MediaGallery({ projectMedia, selectedMilestone, milestoneName }:
                   <MediaGalleryItem
                     item={{
                       type: media.file_type as "image" | "video",
-                      url: media.file_path,
+                      url: getFullUrl(media.file_path),
                       id: media.id
                     }}
                     index={index}
