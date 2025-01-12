@@ -1,9 +1,9 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface MediaItem {
   type: 'image' | 'video';
-  url: Promise<string>;
+  url: string;
   id: string;
 }
 
@@ -19,23 +19,6 @@ export function MediaGalleryItem({
   milestoneName
 }: MediaGalleryItemProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [mediaUrl, setMediaUrl] = useState<string>('');
-
-  useEffect(() => {
-    const loadMediaUrl = async () => {
-      try {
-        const url = await item.url;
-        setMediaUrl(url);
-      } catch (error) {
-        console.error('Error loading media URL:', error);
-      }
-    };
-    loadMediaUrl();
-  }, [item.url]);
-
-  if (!mediaUrl) {
-    return <div className="w-full h-full bg-muted flex items-center justify-center">Loading media...</div>;
-  }
 
   return (
     <>
@@ -43,13 +26,13 @@ export function MediaGalleryItem({
         <div className="relative aspect-video cursor-pointer" onClick={() => item.type === 'image' && setIsOpen(true)}>
           {item.type === 'image' ? (
             <img
-              src={mediaUrl}
+              src={item.url}
               alt={`${milestoneName} media ${index + 1}`}
               className="rounded-md object-cover w-full h-full"
             />
           ) : (
             <video
-              src={mediaUrl}
+              src={item.url}
               controls
               className="rounded-md w-full h-full object-cover"
               controlsList="nodownload"
@@ -65,7 +48,7 @@ export function MediaGalleryItem({
         <DialogContent className="max-w-screen-lg w-full p-0">
           <DialogTitle className="sr-only">Media Preview</DialogTitle>
           <img
-            src={mediaUrl}
+            src={item.url}
             alt={`${milestoneName} media ${index + 1}`}
             className="w-full h-auto rounded-md"
           />

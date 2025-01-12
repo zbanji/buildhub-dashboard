@@ -21,7 +21,7 @@ export function MediaGallery({ projectMedia, selectedMilestone, milestoneName }:
     ? projectMedia.filter(media => media.milestone_id === selectedMilestone)
     : projectMedia;
 
-  const getMediaUrl = async (filePath: string) => {
+  const getMediaUrl = (filePath: string) => {
     const { data } = supabase.storage
       .from('project-media')
       .getPublicUrl(filePath);
