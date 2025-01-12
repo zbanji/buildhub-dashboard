@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { MilestoneCard } from "@/components/project/MilestoneCard";
 import { MediaGallery } from "@/components/project/MediaGallery";
 import { useState } from "react";
@@ -81,24 +80,23 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
               </p>
             </div>
           </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Progress</p>
-            <Progress value={project.progress} className="h-2" />
-          </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <MilestoneCard
-          milestones={milestones}
-          onMilestoneSelect={setSelectedMilestone}
-          selectedMilestone={selectedMilestone}
-        />
-
-        <MediaGallery
-          projectMedia={project.project_media}
-          selectedMilestone={selectedMilestone}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        <div className="md:col-span-7">
+          <MediaGallery
+            projectMedia={project.project_media}
+            selectedMilestone={selectedMilestone}
+          />
+        </div>
+        <div className="md:col-span-5">
+          <MilestoneCard
+            milestones={milestones}
+            onMilestoneSelect={setSelectedMilestone}
+            selectedMilestone={selectedMilestone}
+          />
+        </div>
       </div>
     </div>
   );
