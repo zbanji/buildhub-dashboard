@@ -1,10 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MilestoneCard } from "@/components/project/MilestoneCard";
-import { MediaGallery } from "@/components/project/MediaGallery";
-import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ProjectOverview } from "@/components/project/ProjectOverview";
+import { MilestoneCard } from "@/components/project/MilestoneCard";
+import { MediaGallery } from "@/components/project/MediaGallery";
+import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
 
 interface Project {
   id: string;
@@ -45,7 +45,6 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
         console.error('Error fetching milestones:', error);
         return [];
       }
-
       return data;
     }
   });
@@ -71,7 +70,6 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
         console.error('Error fetching messages:', error);
         return [];
       }
-
       return data;
     }
   });
@@ -86,37 +84,12 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
 
   return (
     <div className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Project Overview</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium">Status</p>
-              <p className="text-sm text-muted-foreground">{project.status}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Budget</p>
-              <p className="text-sm text-muted-foreground">
-                ${project.budget.toLocaleString()}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Square Footage</p>
-              <p className="text-sm text-muted-foreground">
-                {project.squareFootage} sq ft
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Planned Completion</p>
-              <p className="text-sm text-muted-foreground">
-                {project.completionDate}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <ProjectOverview
+        status={project.status}
+        budget={project.budget}
+        squareFootage={project.squareFootage}
+        completionDate={project.completionDate}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
         <div className="md:col-span-5">

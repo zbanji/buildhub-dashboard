@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface Profile {
+export interface Profile {
   email: string | null;
   role: 'admin' | 'client';
 }
@@ -32,10 +32,10 @@ export interface Milestone {
   planned_completion: string;
 }
 
-export function useProjectData(selectedProject: string | null) {
+export function useProjects() {
   const { toast } = useToast();
 
-  const { data: projects = [], refetch: refetchProjects } = useQuery({
+  return useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
       const { data: projectsData, error } = await supabase
@@ -61,13 +61,15 @@ export function useProjectData(selectedProject: string | null) {
         return [];
       }
 
-      return projectsData as unknown as Project[];
+      return projectsData as Project[];
     }
   });
+}
 
-  const { data: messages = [], refetch: refetchMessages } = useQuery({
-    queryKey: ['messages', selectedProject],
-    enabled: !!selectedProject,
+export function useProjectMessages(projectId: string | null) {
+  return useQuery({
+    queryKey: ['messages', projectId],
+    enabled: !!projectId,
     queryFn: async () => {
       const { data: messagesData, error } = await supabase
         .from('messages')
@@ -80,7 +82,7 @@ export function useProjectData(selectedProject: string | null) {
             role
           )
         `)
-        .eq('project_id', selectedProject)
+        .eq('project_id', projectId)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -88,18 +90,20 @@ export function useProjectData(selectedProject: string | null) {
         return [];
       }
 
-      return messagesData as unknown as Message[];
+      return messagesData as Message[];
     }
   });
+}
 
-  const { data: milestones = [], refetch: refetchMilestones } = useQuery({
-    queryKey: ['milestones', selectedProject],
-    enabled: !!selectedProject,
+export function useProjectMilestones(projectId: string | null) {
+  return useQuery({
+    queryKey: ['milestones', projectId],
+    enabled: !!projectId,
     queryFn: async () => {
       const { data: milestonesData, error } = await supabase
         .from('project_milestones')
         .select('*')
-        .eq('project_id', selectedProject)
+        .eq('project_id', projectId)
         .order('planned_completion', { ascending: true });
 
       if (error) {
@@ -110,13 +114,4 @@ export function useProjectData(selectedProject: string | null) {
       return milestonesData as Milestone[];
     }
   });
-
-  return {
-    projects,
-    messages,
-    milestones,
-    refetchMessages,
-    refetchProjects,
-    refetchMilestones
-  };
 }

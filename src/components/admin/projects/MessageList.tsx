@@ -26,12 +26,6 @@ export function MessageList({ messages }: MessageListProps) {
                 <span className="text-sm font-medium">
                   {message.profiles?.email}
                 </span>
-                <span className={cn(
-                  "text-xs",
-                  isAdmin ? "text-gray-300" : "text-gray-600"
-                )}>
-                  {isAdmin ? 'Admin' : 'Client'}
-                </span>
               </div>
               <span className={cn(
                 "text-xs",
