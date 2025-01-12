@@ -37,7 +37,7 @@ export default function Index() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading } = useQuery({
     queryKey: ['client-projects'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -55,6 +55,13 @@ export default function Index() {
             file_path,
             file_type,
             milestone_id
+          ),
+          project_milestones (
+            id,
+            name,
+            status,
+            progress,
+            planned_completion
           )
         `)
         .eq('client_id', user.id);
@@ -72,18 +79,17 @@ export default function Index() {
         ...project,
         completionDate: new Date(project.planned_completion).toLocaleDateString(),
         squareFootage: `${project.square_footage.toLocaleString()}`,
-        progress: 0,
-        milestones: [],
-        updates: [],
+        progress: project.project_milestones?.[0]?.progress || 0,
+        milestones: project.project_milestones || [],
       }));
     },
   });
 
   useEffect(() => {
-    if (!selectedProject && projects.length > 0) {
+    if (!selectedProject && projects.length > 0 && !isLoading) {
       setSelectedProject(projects[0]);
     }
-  }, [projects]);
+  }, [projects, isLoading]);
 
   const ProjectsList = () => (
     <div className="divide-y">

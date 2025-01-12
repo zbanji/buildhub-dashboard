@@ -72,11 +72,12 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
     }
   });
 
+  // Set the first milestone as selected when milestones are loaded or when project changes
   useEffect(() => {
-    if (milestones.length > 0 && !selectedMilestone) {
+    if (milestones.length > 0) {
       setSelectedMilestone(milestones[0].id);
     }
-  }, [milestones, selectedMilestone]);
+  }, [milestones, project.id]);
 
   const selectedMilestoneDetails = milestones.find(m => m.id === selectedMilestone);
 
