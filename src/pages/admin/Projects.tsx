@@ -2,14 +2,16 @@ import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { ProjectList } from "@/components/admin/projects/ProjectList";
 import { ProjectHeader } from "@/components/admin/projects/ProjectHeader";
-import { useProjectData } from "@/hooks/use-project-data";
+import { useProjects, useProjectMessages, useProjectMilestones } from "@/hooks/use-project-data";
 import { EditProjectDialog } from "@/components/admin/EditProjectDialog";
 import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
 import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
 
 export default function AdminProjects() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const { projects, messages, milestones, refetchMessages, refetchProjects } = useProjectData(selectedProject);
+  const { data: projects, refetch: refetchProjects } = useProjects();
+  const { data: messages, refetch: refetchMessages } = useProjectMessages(selectedProject);
+  const { data: milestones } = useProjectMilestones(selectedProject);
 
   return (
     <Layout>
@@ -18,7 +20,7 @@ export default function AdminProjects() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
             <ProjectList
-              projects={projects}
+              projects={projects || []}
               selectedProject={selectedProject}
               onProjectSelect={setSelectedProject}
               onProjectUpdate={refetchProjects}
@@ -36,14 +38,14 @@ export default function AdminProjects() {
                     />
                     <ProjectUpdateDialog
                       projectId={selectedProject}
-                      milestones={milestones}
+                      milestones={milestones || []}
                       onUpdate={refetchProjects}
                     />
                   </div>
                 </div>
                 <ProjectMessages
                   selectedProject={selectedProject}
-                  messages={messages}
+                  messages={messages || []}
                   onMessageSent={refetchMessages}
                 />
               </>
