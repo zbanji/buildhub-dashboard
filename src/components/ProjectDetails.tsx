@@ -1,10 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProjectOverview } from "@/components/project/ProjectOverview";
-import { MilestoneCard } from "@/components/project/MilestoneCard";
-import { MediaGallery } from "@/components/project/MediaGallery";
-import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
+import { ProjectContent } from "@/components/project/ProjectContent";
 
 interface Project {
   id: string;
@@ -90,30 +88,16 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
         squareFootage={project.squareFootage}
         completionDate={project.completionDate}
       />
-
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-        <div className="md:col-span-5">
-          <MilestoneCard
-            milestones={milestones}
-            onMilestoneSelect={setSelectedMilestone}
-            selectedMilestone={selectedMilestone}
-          />
-        </div>
-        <div className="md:col-span-7">
-          <MediaGallery
-            projectMedia={project.project_media}
-            selectedMilestone={selectedMilestone}
-            milestoneName={selectedMilestoneDetails?.name}
-          />
-          <div className="mt-8">
-            <ProjectMessages
-              selectedProject={project.id}
-              messages={messages}
-              onMessageSent={refetchMessages}
-            />
-          </div>
-        </div>
-      </div>
+      <ProjectContent
+        projectId={project.id}
+        milestones={milestones}
+        selectedMilestone={selectedMilestone}
+        selectedMilestoneDetails={selectedMilestoneDetails}
+        projectMedia={project.project_media}
+        messages={messages}
+        onMilestoneSelect={setSelectedMilestone}
+        onMessageSent={refetchMessages}
+      />
     </div>
   );
 }

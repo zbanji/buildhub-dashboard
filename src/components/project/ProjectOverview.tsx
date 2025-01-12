@@ -9,12 +9,12 @@ interface ProjectOverviewProps {
 
 export function ProjectOverview({ status, budget, squareFootage, completionDate }: ProjectOverviewProps) {
   return (
-    <Card>
+    <Card className="max-w-3xl mx-auto">
       <CardHeader>
         <CardTitle>Project Overview</CardTitle>
       </CardHeader>
-      <CardContent className="grid gap-4">
-        <div className="grid grid-cols-2 gap-4">
+      <CardContent>
+        <div className="grid grid-cols-4 gap-4">
           <div>
             <p className="text-sm font-medium">Status</p>
             <p className="text-sm text-muted-foreground">{status}</p>
