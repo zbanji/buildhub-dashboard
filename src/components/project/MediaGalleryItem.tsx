@@ -29,6 +29,10 @@ export function MediaGalleryItem({
               src={item.url}
               alt={`${milestoneName} media ${index + 1}`}
               className="rounded-md object-cover w-full h-full"
+              onError={(e) => {
+                console.error('Image failed to load:', item.url);
+                e.currentTarget.src = '/placeholder.svg';
+              }}
             />
           ) : (
             <video
@@ -37,6 +41,9 @@ export function MediaGalleryItem({
               className="rounded-md w-full h-full object-cover"
               controlsList="nodownload"
               preload="metadata"
+              onError={(e) => {
+                console.error('Video failed to load:', item.url);
+              }}
             >
               Your browser does not support the video tag.
             </video>
@@ -51,6 +58,10 @@ export function MediaGalleryItem({
             src={item.url}
             alt={`${milestoneName} media ${index + 1}`}
             className="w-full h-auto rounded-md"
+            onError={(e) => {
+              console.error('Image failed to load in preview:', item.url);
+              e.currentTarget.src = '/placeholder.svg';
+            }}
           />
         </DialogContent>
       </Dialog>
