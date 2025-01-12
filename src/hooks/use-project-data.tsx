@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Profile {
   email: string | null;
+  role: 'admin' | 'client';
 }
 
 export interface Project {
@@ -46,7 +47,8 @@ export function useProjectData(selectedProject: string | null) {
           client_id,
           budget,
           profiles!projects_client_id_fkey (
-            email
+            email,
+            role
           )
         `);
 
@@ -73,7 +75,10 @@ export function useProjectData(selectedProject: string | null) {
           id,
           content,
           created_at,
-          sender:profiles(email)
+          profiles!messages_sender_id_fkey(
+            email,
+            role
+          )
         `)
         .eq('project_id', selectedProject)
         .order('created_at', { ascending: true });
