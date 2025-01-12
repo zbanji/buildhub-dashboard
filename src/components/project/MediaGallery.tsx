@@ -52,7 +52,7 @@ export function MediaGallery({ projectMedia, selectedMilestone, milestoneName }:
             <CarouselNext />
           </Carousel>
         ) : (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground text-center py-8">
             No media available {selectedMilestone ? "for this milestone" : ""}.
           </p>
         )}
