@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AuthError } from "@supabase/supabase-js";
 
 interface UseAuthStateProps {
   expectedRole: 'admin' | 'client';
@@ -18,8 +19,17 @@ export function useAuthState({ expectedRole, successPath }: UseAuthStateProps) {
     const checkSession = async () => {
       try {
         setIsLoading(true);
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
+        if (sessionError) {
+          if (sessionError.message.includes('refresh_token_not_found')) {
+            // Clear the invalid session
+            await supabase.auth.signOut();
+            throw new Error('Session expired. Please sign in again.');
+          }
+          throw sessionError;
+        }
+
         if (session?.user) {
           const { data: profileData, error: profileError } = await supabase
             .from("profiles")
@@ -42,7 +52,10 @@ export function useAuthState({ expectedRole, successPath }: UseAuthStateProps) {
         }
       } catch (err) {
         console.error("Authentication error:", err);
-        setError(err instanceof Error ? err.message : "Error verifying user role. Please try again.");
+        const errorMessage = err instanceof Error ? err.message : "Error verifying user role. Please try again.";
+        setError(errorMessage);
+        // Ensure we're signed out if there's an error
+        await supabase.auth.signOut();
       } finally {
         setIsLoading(false);
       }
@@ -79,6 +92,9 @@ export function useAuthState({ expectedRole, successPath }: UseAuthStateProps) {
         } finally {
           setIsLoading(false);
         }
+      } else if (event === 'SIGNED_OUT') {
+        setError("");
+        setIsLoading(false);
       }
     });
 
