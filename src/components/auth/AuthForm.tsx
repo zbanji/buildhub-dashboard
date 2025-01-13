@@ -4,16 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { AuthError } from "@supabase/supabase-js";
 
 interface AuthFormProps {
   title: string;
   error?: string;
 }
 
-export function AuthForm({ title, error }: AuthFormProps) {
+export function AuthForm({ title, error: propError }: AuthFormProps) {
   const [searchParams] = useSearchParams();
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(propError || null);
   
   const baseUrl = window.location.origin;
   const redirectTo = `${baseUrl}/client`;
@@ -27,6 +29,39 @@ export function AuthForm({ title, error }: AuthFormProps) {
       setMessage("Please enter your new password below");
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN") {
+        setError(null);
+      } else if (event === "USER_DELETED") {
+        setError("Your account has been deleted.");
+      } else if (event === "PASSWORD_RECOVERY") {
+        setMessage("Check your email for the password reset link.");
+      } else if (event === "SIGNED_OUT") {
+        setError(null);
+        setMessage(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleAuthError = (error: AuthError) => {
+    let errorMessage = "An error occurred during authentication.";
+    
+    if (error.message.includes("Invalid login credentials")) {
+      errorMessage = "Invalid email or password. Please check your credentials and try again.";
+    } else if (error.message.includes("Email not confirmed")) {
+      errorMessage = "Please verify your email address before signing in.";
+    } else if (error.message.includes("User not found")) {
+      errorMessage = "No account found with these credentials.";
+    } else if (error.message.includes("Password recovery")) {
+      errorMessage = "If an account exists with this email, you will receive a password reset link.";
+    }
+    
+    setError(errorMessage);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -89,6 +124,7 @@ export function AuthForm({ title, error }: AuthFormProps) {
               },
             },
           }}
+          onError={handleAuthError}
           queryParams={{
             password_reset_redirect_to: resetPasswordRedirectTo,
           }}
