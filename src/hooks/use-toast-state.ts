@@ -9,8 +9,6 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
-  open: boolean
-  onOpenChange: (open: boolean) => void
 }
 
 type ActionType = {
@@ -156,9 +154,6 @@ export function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
-        if (!open) dismiss()
-      },
     },
   })
 

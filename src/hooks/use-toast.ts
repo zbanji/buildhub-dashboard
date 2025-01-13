@@ -12,11 +12,13 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
-  open: boolean
-  onOpenChange: (open: boolean) => void
 }
 
-interface Toast extends Omit<ToasterToast, "id"> {}
+type Toast = Partial<ToasterToast> & {
+  title?: React.ReactNode
+  description?: React.ReactNode
+  variant?: "default" | "destructive"
+}
 
 export function useToast() {
   const [state, setState] = React.useState(memoryState)
