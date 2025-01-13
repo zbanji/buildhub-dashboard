@@ -34,10 +34,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setView("update_password");
-        const lastError = (supabase.auth.getSession() as any)?.error;
-        if (lastError?.message?.includes("over_email_send_rate_limit")) {
-          setError("Please wait 60 seconds before requesting another password reset.");
-        }
       }
     });
 
@@ -49,6 +45,12 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
+        options: {
+          shouldCreateUser: false, // This ensures we only send OTP to existing users
+          data: {
+            type: 'recovery' // This indicates this is for password recovery
+          }
+        }
       });
       
       if (error) throw error;
@@ -66,7 +68,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: otp,
-        type: 'email'
+        type: 'recovery'
       });
       
       if (error) throw error;
