@@ -46,10 +46,8 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          shouldCreateUser: false, // This ensures we only send OTP to existing users
-          data: {
-            type: 'recovery' // This indicates this is for password recovery
-          }
+          shouldCreateUser: false,
+          emailRedirectTo: redirectTo
         }
       });
       
@@ -68,7 +66,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: otp,
-        type: 'recovery'
+        type: 'email'
       });
       
       if (error) throw error;
