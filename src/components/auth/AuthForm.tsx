@@ -29,7 +29,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
 
     // Listen for auth state changes and errors
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      // Handle rate limit error from the API response
       if (event === "PASSWORD_RECOVERY") {
         const lastError = (supabase.auth.getSession() as any)?.error;
         if (lastError?.message?.includes("over_email_send_rate_limit")) {
