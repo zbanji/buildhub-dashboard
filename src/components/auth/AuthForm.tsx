@@ -79,7 +79,7 @@ export function AuthForm({ title, error }: AuthFormProps) {
                 button_label: 'Send reset password instructions',
                 loading_button_label: 'Sending reset instructions...',
                 link_text: 'Forgot your password?',
-                confirmation_text: 'Check your email for the password reset link',
+                confirmation_text: 'Check your email for your new password',
               },
               update_password: {
                 password_label: 'New Password',
