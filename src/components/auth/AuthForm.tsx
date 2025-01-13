@@ -19,7 +19,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   
   const baseUrl = window.location.origin;
   const redirectTo = `${baseUrl}/client`;
-  const resetPasswordRedirectTo = `${baseUrl}/client/login?type=recovery`;
+  const resetPasswordRedirectTo = `${baseUrl}/client/login`;
 
   useEffect(() => {
     const type = searchParams.get("type");
