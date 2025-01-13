@@ -1,11 +1,22 @@
 import * as React from "react"
-import type { ToasterToast } from "@/components/ui/toast"
+import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 import { 
   listeners, 
   memoryState, 
   toast, 
   dispatch 
 } from "./use-toast-state"
+
+type ToasterToast = ToastProps & {
+  id: string
+  title?: React.ReactNode
+  description?: React.ReactNode
+  action?: ToastActionElement
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+interface Toast extends Omit<ToasterToast, "id"> {}
 
 export function useToast() {
   const [state, setState] = React.useState(memoryState)
@@ -28,3 +39,4 @@ export function useToast() {
 }
 
 export { toast }
+export type { Toast }
