@@ -11,6 +11,7 @@ interface AuthFormProps {
 export function AuthForm({ title, error }: AuthFormProps) {
   const baseUrl = window.location.origin;
   const redirectTo = `${baseUrl}/client`;
+  const resetPasswordRedirectTo = `${baseUrl}/client/login`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -61,6 +62,9 @@ export function AuthForm({ title, error }: AuthFormProps) {
                 confirmation_text: 'Check your email for the password reset link',
               },
             },
+          }}
+          queryParams={{
+            password_reset_redirect_to: resetPasswordRedirectTo,
           }}
         />
       </div>
