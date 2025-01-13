@@ -27,11 +27,12 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       setView("update_password");
     }
 
-    // Listen for auth errors
+    // Listen for auth state changes and errors
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY_ERROR") {
-        const error = session?.error;
-        if (error?.message.includes("over_email_send_rate_limit")) {
+      // Handle rate limit error from the API response
+      if (event === "RESET_PASSWORD_EMAIL_SENT" && session === null) {
+        const lastError = (supabase.auth.getSession() as any)?.error;
+        if (lastError?.message?.includes("over_email_send_rate_limit")) {
           setError("Please wait 60 seconds before requesting another password reset.");
         }
       }
