@@ -34,8 +34,8 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN") {
         setError(null);
-      } else if (event === "USER_DELETED") {
-        setError("Your account has been deleted.");
+      } else if (event === "USER_UPDATED" && !session) {
+        setError("Authentication failed. Please try again.");
       } else if (event === "PASSWORD_RECOVERY") {
         setMessage("Check your email for the password reset link.");
       } else if (event === "SIGNED_OUT") {
@@ -44,24 +44,28 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Listen for auth errors using the client's error listener
+    const authListener = supabase.auth.onError((error) => {
+      let errorMessage = "An error occurred during authentication.";
+      
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      } else if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Please verify your email address before signing in.";
+      } else if (error.message.includes("User not found")) {
+        errorMessage = "No account found with these credentials.";
+      } else if (error.message.includes("Password recovery")) {
+        errorMessage = "If an account exists with this email, you will receive a password reset link.";
+      }
+      
+      setError(errorMessage);
+    });
 
-  const handleAuthError = (error: AuthError) => {
-    let errorMessage = "An error occurred during authentication.";
-    
-    if (error.message.includes("Invalid login credentials")) {
-      errorMessage = "Invalid email or password. Please check your credentials and try again.";
-    } else if (error.message.includes("Email not confirmed")) {
-      errorMessage = "Please verify your email address before signing in.";
-    } else if (error.message.includes("User not found")) {
-      errorMessage = "No account found with these credentials.";
-    } else if (error.message.includes("Password recovery")) {
-      errorMessage = "If an account exists with this email, you will receive a password reset link.";
-    }
-    
-    setError(errorMessage);
-  };
+    return () => {
+      subscription.unsubscribe();
+      authListener.data.subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -124,7 +128,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
               },
             },
           }}
-          onError={handleAuthError}
           queryParams={{
             password_reset_redirect_to: resetPasswordRedirectTo,
           }}
