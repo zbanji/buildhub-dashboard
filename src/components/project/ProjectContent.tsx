@@ -1,8 +1,10 @@
+import { useRef } from "react";
 import { MilestoneCard } from "@/components/project/MilestoneCard";
 import { MediaGallery } from "@/components/project/MediaGallery";
 import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProjectContentProps {
   projectId: string;
@@ -25,6 +27,18 @@ export function ProjectContent({
   onMilestoneSelect,
   onMessageSent
 }: ProjectContentProps) {
+  const mediaGalleryRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+
+  const handleMilestoneSelect = (id: string) => {
+    onMilestoneSelect(id);
+    if (isMobile && mediaGalleryRef.current) {
+      setTimeout(() => {
+        mediaGalleryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Mobile helper text */}
@@ -41,23 +55,23 @@ export function ProjectContent({
         <div className="md:col-span-5 order-2 md:order-1">
           <MilestoneCard
             milestones={milestones}
-            onMilestoneSelect={onMilestoneSelect}
+            onMilestoneSelect={handleMilestoneSelect}
             selectedMilestone={selectedMilestone}
           />
         </div>
-        <div className="md:col-span-7 order-1 md:order-2">
-          <MediaGallery
-            projectMedia={projectMedia}
-            selectedMilestone={selectedMilestone}
-            milestoneName={selectedMilestoneDetails?.name}
-          />
-          <div className="mt-8">
-            <ProjectMessages
-              selectedProject={projectId}
-              messages={messages}
-              onMessageSent={onMessageSent}
+        <div className="md:col-span-7 order-1 md:order-2 space-y-8">
+          <div ref={mediaGalleryRef}>
+            <MediaGallery
+              projectMedia={projectMedia}
+              selectedMilestone={selectedMilestone}
+              milestoneName={selectedMilestoneDetails?.name}
             />
           </div>
+          <ProjectMessages
+            selectedProject={projectId}
+            messages={messages}
+            onMessageSent={onMessageSent}
+          />
         </div>
       </div>
     </div>
