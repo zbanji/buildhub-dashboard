@@ -22,8 +22,8 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   
-  const baseUrl = "https://buildhub-dashboard.lovable.app";
-  const redirectTo = `${baseUrl}/client`;
+  // Use current window location for redirect
+  const redirectTo = `${window.location.origin}/client`;
 
   useEffect(() => {
     const type = searchParams.get("type");
@@ -40,9 +40,18 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     return () => subscription.unsubscribe();
   }, [searchParams, setError]);
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error("Please enter a valid email address");
+    }
+  };
+
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      validateEmail(email);
+      
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -63,6 +72,10 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (!otp || otp.length < 6) {
+        throw new Error("Please enter a valid OTP code");
+      }
+
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: otp,
@@ -80,6 +93,10 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (!newPassword || newPassword.length < 6) {
+        throw new Error("Password must be at least 6 characters long");
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
