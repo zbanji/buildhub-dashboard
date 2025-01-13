@@ -22,33 +22,36 @@ export function useAuthState({ expectedRole, successPath }: UseAuthStateProps) {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
+          // Handle refresh token errors specifically
           if (sessionError.message.includes('refresh_token_not_found')) {
-            // Clear the invalid session
             await supabase.auth.signOut();
-            throw new Error('Session expired. Please sign in again.');
+            throw new Error('Your session has expired. Please sign in again.');
           }
           throw sessionError;
         }
 
-        if (session?.user) {
-          const { data: profileData, error: profileError } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", session.user.id)
-            .single();
+        if (!session) {
+          setError("");
+          return;
+        }
 
-          if (profileError) throw profileError;
-          if (!profileData) throw new Error("User profile not found");
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
 
-          if (profileData.role === expectedRole) {
-            toast({
-              title: "Welcome back!",
-              description: `Successfully logged in as ${expectedRole}.`,
-            });
-            navigate(successPath);
-          } else {
-            throw new Error(`Access denied. This login is for ${expectedRole}s only.`);
-          }
+        if (profileError) throw profileError;
+        if (!profileData) throw new Error("User profile not found");
+
+        if (profileData.role === expectedRole) {
+          toast({
+            title: "Welcome back!",
+            description: `Successfully logged in as ${expectedRole}.`,
+          });
+          navigate(successPath);
+        } else {
+          throw new Error(`Access denied. This login is for ${expectedRole}s only.`);
         }
       } catch (err) {
         console.error("Authentication error:", err);
