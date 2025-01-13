@@ -1,1 +1,10 @@
 project_id = "bnuzwrlgjtuqoiadsnhj"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[[functions]]
+name = "send-password-reset"
+verify_jwt = false
