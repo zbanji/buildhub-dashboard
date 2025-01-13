@@ -31,20 +31,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   }, [searchParams]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN") {
-        setError(null);
-      } else if (event === "USER_UPDATED" && !session) {
-        setError("Authentication failed. Please try again.");
-      } else if (event === "PASSWORD_RECOVERY") {
-        setMessage("Check your email for the password reset link.");
-      } else if (event === "SIGNED_OUT") {
-        setError(null);
-        setMessage(null);
-      }
-    });
-
-    // Set up error handling
     const handleAuthError = (error: AuthError) => {
       let errorMessage = "An error occurred during authentication.";
       
@@ -61,11 +47,16 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       setError(errorMessage);
     };
 
-    // Set up error listener
-    supabase.auth.onAuthStateChange((event, session) => {
-      const authError = supabase.auth.getError();
-      if (authError) {
-        handleAuthError(authError);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN") {
+        setError(null);
+      } else if (event === "USER_UPDATED" && !session) {
+        setError("Authentication failed. Please try again.");
+      } else if (event === "PASSWORD_RECOVERY") {
+        setMessage("Check your email for the password reset link.");
+      } else if (event === "SIGNED_OUT") {
+        setError(null);
+        setMessage(null);
       }
     });
 
