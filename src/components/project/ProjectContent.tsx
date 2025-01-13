@@ -52,14 +52,15 @@ export function ProjectContent({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-        <div className="md:col-span-5 order-2 md:order-1">
+        {/* On mobile: Show milestones first */}
+        <div className="md:col-span-5 order-1 md:order-1">
           <MilestoneCard
             milestones={milestones}
             onMilestoneSelect={handleMilestoneSelect}
             selectedMilestone={selectedMilestone}
           />
         </div>
-        <div className="md:col-span-7 order-1 md:order-2 space-y-8">
+        <div className="md:col-span-7 order-2 md:order-2 space-y-8">
           <div ref={mediaGalleryRef}>
             <MediaGallery
               projectMedia={projectMedia}
