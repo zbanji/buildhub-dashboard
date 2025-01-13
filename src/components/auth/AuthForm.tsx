@@ -44,8 +44,8 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       }
     });
 
-    // Listen for auth errors using the client's error listener
-    const authListener = supabase.auth.onError((error) => {
+    // Listen for auth errors using the auth state change event
+    const handleAuthError = (error: AuthError) => {
       let errorMessage = "An error occurred during authentication.";
       
       if (error.message.includes("Invalid login credentials")) {
@@ -59,11 +59,17 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       }
       
       setError(errorMessage);
+    };
+
+    const errorSubscription = supabase.auth.onAuthStateChange((event, session, error) => {
+      if (error) {
+        handleAuthError(error);
+      }
     });
 
     return () => {
       subscription.unsubscribe();
-      authListener.data.subscription.unsubscribe();
+      errorSubscription.data.subscription.unsubscribe();
     };
   }, []);
 
