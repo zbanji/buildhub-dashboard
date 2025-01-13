@@ -10,6 +10,7 @@ interface AuthFormProps {
 
 export function AuthForm({ title, error }: AuthFormProps) {
   const baseUrl = window.location.origin;
+  const redirectTo = `${baseUrl}/client`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -38,7 +39,29 @@ export function AuthForm({ title, error }: AuthFormProps) {
             }
           }}
           providers={[]}
-          redirectTo={`${baseUrl}/client`}
+          redirectTo={redirectTo}
+          view="sign_in"
+          showLinks={true}
+          localization={{
+            variables: {
+              sign_in: {
+                email_label: 'Email',
+                password_label: 'Password',
+                button_label: 'Sign In',
+                loading_button_label: 'Signing in...',
+                social_provider_text: 'Sign in with {{provider}}',
+                link_text: "Already have an account? Sign in",
+              },
+              forgotten_password: {
+                email_label: 'Email',
+                password_label: 'Password',
+                button_label: 'Send reset password instructions',
+                loading_button_label: 'Sending reset instructions...',
+                link_text: 'Forgot your password?',
+                confirmation_text: 'Check your email for the password reset link',
+              },
+            },
+          }}
         />
       </div>
     </div>
