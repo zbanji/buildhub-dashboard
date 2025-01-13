@@ -110,7 +110,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </SheetContent>
               </Sheet>
             ) : null}
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">BuildTrack</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-primary">BuildHub</h1>
             <div className="flex items-center gap-4">
               {user && <UserMenu />}
             </div>
