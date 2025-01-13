@@ -44,7 +44,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       }
     });
 
-    // Listen for auth errors using the auth state change event
+    // Set up error handling
     const handleAuthError = (error: AuthError) => {
       let errorMessage = "An error occurred during authentication.";
       
@@ -61,15 +61,16 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       setError(errorMessage);
     };
 
-    const errorSubscription = supabase.auth.onAuthStateChange((event, session, error) => {
-      if (error) {
-        handleAuthError(error);
+    // Set up error listener
+    supabase.auth.onAuthStateChange((event, session) => {
+      const authError = supabase.auth.getError();
+      if (authError) {
+        handleAuthError(authError);
       }
     });
 
     return () => {
       subscription.unsubscribe();
-      errorSubscription.data.subscription.unsubscribe();
     };
   }, []);
 
