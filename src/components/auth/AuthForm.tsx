@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { AuthContainer } from "./AuthContainer";
 import { AuthMessage } from "./AuthMessage";
 import { useAuthMessages } from "@/hooks/auth/use-auth-messages";
-import { useAuthConfig } from "@/hooks/auth/use-auth-config";
 
 interface AuthFormProps {
   title: string;
@@ -17,7 +16,10 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   const [searchParams] = useSearchParams();
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
   const { message, error } = useAuthMessages(propError);
-  const { redirectTo, resetPasswordRedirectTo, authConfig } = useAuthConfig();
+  
+  const baseUrl = window.location.origin;
+  const redirectTo = `${baseUrl}/client`;
+  const resetPasswordRedirectTo = `${baseUrl}/client/login`;
 
   useEffect(() => {
     const type = searchParams.get("type");
@@ -33,11 +35,46 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       <Auth
         supabaseClient={supabase}
         view={view}
-        appearance={authConfig.appearance}
+        appearance={{ 
+          theme: ThemeSupa,
+          variables: {
+            default: {
+              colors: {
+                brand: '#2563eb',
+                brandAccent: '#1d4ed8',
+              }
+            }
+          }
+        }}
         providers={[]}
         redirectTo={redirectTo}
         showLinks={true}
-        localization={authConfig.localization}
+        localization={{
+          variables: {
+            sign_in: {
+              email_label: 'Email',
+              password_label: 'Password',
+              button_label: 'Sign In',
+              loading_button_label: 'Signing in...',
+              social_provider_text: 'Sign in with {{provider}}',
+              link_text: "Already have an account? Sign in",
+            },
+            forgotten_password: {
+              email_label: 'Email',
+              password_label: 'Password',
+              button_label: 'Send reset password instructions',
+              loading_button_label: 'Sending reset instructions...',
+              link_text: 'Forgot your password?',
+              confirmation_text: 'Check your email for the reset password link',
+            },
+            update_password: {
+              password_label: 'New Password',
+              button_label: 'Update Password',
+              loading_button_label: 'Updating Password...',
+              confirmation_text: 'Your password has been updated successfully',
+            },
+          },
+        }}
         queryParams={{
           password_reset_redirect_to: resetPasswordRedirectTo,
         }}
