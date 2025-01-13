@@ -15,7 +15,7 @@ interface AuthFormProps {
 export function AuthForm({ title, error: propError }: AuthFormProps) {
   const [searchParams] = useSearchParams();
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
-  const { message, error } = useAuthMessages(propError);
+  const { message, error, setError } = useAuthMessages(propError);
   
   const baseUrl = window.location.origin;
   const redirectTo = `${baseUrl}/client`;
@@ -26,7 +26,19 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     if (type === "recovery") {
       setView("update_password");
     }
-  }, [searchParams]);
+
+    // Listen for auth errors
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY_ERROR") {
+        const error = session?.error;
+        if (error?.message.includes("over_email_send_rate_limit")) {
+          setError("Please wait 60 seconds before requesting another password reset.");
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [searchParams, setError]);
 
   return (
     <AuthContainer title={view === "update_password" ? "Reset Password" : title}>
@@ -65,7 +77,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
               button_label: 'Send reset password instructions',
               loading_button_label: 'Sending reset instructions...',
               link_text: 'Forgot your password?',
-              confirmation_text: 'Check your email for the reset password link',
+              confirmation_text: 'Check your email for the password reset link',
             },
             update_password: {
               password_label: 'New Password',
