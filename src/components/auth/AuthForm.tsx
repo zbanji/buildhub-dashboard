@@ -19,7 +19,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   
   const baseUrl = window.location.origin;
   const redirectTo = `${baseUrl}/client`;
-  const resetPasswordRedirectTo = `${baseUrl}/client/login`;
+  const resetPasswordRedirectTo = `${baseUrl}/client/login?type=recovery`;
 
   useEffect(() => {
     const type = searchParams.get("type");
@@ -28,9 +28,9 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     }
 
     // Listen for auth state changes and errors
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       // Handle rate limit error from the API response
-      if (event === "RESET_PASSWORD_EMAIL_SENT" && session === null) {
+      if (event === "PASSWORD_RECOVERY") {
         const lastError = (supabase.auth.getSession() as any)?.error;
         if (lastError?.message?.includes("over_email_send_rate_limit")) {
           setError("Please wait 60 seconds before requesting another password reset.");
