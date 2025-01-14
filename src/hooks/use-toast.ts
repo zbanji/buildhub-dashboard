@@ -21,7 +21,7 @@ type Toast = Partial<ToasterToast> & {
 
 const TOAST_TIMEOUT = 60000; // 1 minute in milliseconds
 
-export function useToast() {
+function useToast() {
   const [state, setState] = React.useState(memoryState)
 
   React.useEffect(() => {
@@ -71,5 +71,8 @@ export function useToast() {
   }
 }
 
-export { toast }
+// Create a singleton instance of the toast function
+const { toast } = useToast()
+
+export { useToast, toast }
 export type { Toast }
