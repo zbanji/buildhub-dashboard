@@ -1,6 +1,7 @@
 export interface Profile {
   email: string | null;
   role: 'admin' | 'client';
+  name: string | null;
 }
 
 export interface Project {
