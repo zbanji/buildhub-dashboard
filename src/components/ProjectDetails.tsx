@@ -58,7 +58,8 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
           created_at,
           profiles!messages_sender_id_fkey (
             email,
-            role
+            role,
+            name
           )
         `)
         .eq('project_id', project.id)
@@ -72,7 +73,6 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
     }
   });
 
-  // Set the first milestone as selected when milestones are loaded or when project changes
   useEffect(() => {
     if (milestones.length > 0) {
       setSelectedMilestone(milestones[0].id);
@@ -91,6 +91,7 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
       />
       <ProjectContent
         projectId={project.id}
+        projectName={project.name}
         milestones={milestones}
         selectedMilestone={selectedMilestone}
         selectedMilestoneDetails={selectedMilestoneDetails}
