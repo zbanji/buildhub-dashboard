@@ -89,10 +89,12 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         queryParams={{
           password_reset_redirect_to: resetPasswordRedirectTo,
         }}
-        options={{
-          signUpLink: false,
-          forgotPasswordLink: true,
-        }}
+        magicLink={false}
+        socialLayout="horizontal"
+        theme="default"
+        onlyThirdPartyProviders={false}
+        redirectIfLoggedIn={true}
+        disableSignUp={true}
       />
     </AuthContainer>
   );
