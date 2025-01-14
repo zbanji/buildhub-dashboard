@@ -17,8 +17,8 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
   const { message, error, setError } = useAuthMessages(propError);
   
-  // Use absolute URLs for redirects to ensure consistent behavior
-  const baseUrl = "https://buildhub-dashboard.lovable.app";
+  // Remove port separator from URLs
+  const baseUrl = window.location.origin;
   const redirectTo = `${baseUrl}/client`;
   const resetPasswordRedirectTo = `${baseUrl}/client/login?type=recovery`;
 
