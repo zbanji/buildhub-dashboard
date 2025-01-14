@@ -5,7 +5,7 @@ import { RefetchOptions, QueryObserverResult } from "@tanstack/react-query";
 import { Dispatch, SetStateAction } from "react";
 
 interface ProjectsByClient {
-  [clientEmail: string]: Project[];
+  [clientName: string]: Project[];
 }
 
 export interface ProjectListProps {
@@ -21,27 +21,27 @@ export function ProjectList({
   onProjectSelect,
   onProjectUpdate 
 }: ProjectListProps) {
-  // Group projects by client email
+  // Group projects by client name, fallback to email if name is not available
   const projectsByClient = projects.reduce((acc: ProjectsByClient, project) => {
-    const clientEmail = project.profiles?.email || 'Unknown Client';
-    if (!acc[clientEmail]) {
-      acc[clientEmail] = [];
+    const clientName = project.profiles?.name || project.profiles?.email || 'Unknown Client';
+    if (!acc[clientName]) {
+      acc[clientName] = [];
     }
-    acc[clientEmail].push(project);
+    acc[clientName].push(project);
     return acc;
   }, {});
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Projects by Client</CardTitle>
+        <CardTitle>Projects</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {Object.entries(projectsByClient).map(([clientEmail, clientProjects]) => (
-            <div key={clientEmail} className="space-y-2">
+          {Object.entries(projectsByClient).map(([clientName, clientProjects]) => (
+            <div key={clientName} className="space-y-2">
               <h3 className="font-semibold text-sm text-muted-foreground">
-                {clientEmail}
+                {clientName}
               </h3>
               <div className="space-y-2 pl-4">
                 {clientProjects.map((project) => (
