@@ -60,7 +60,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         }}
         providers={[]}
         redirectTo={redirectTo}
-        showLinks={true}
+        showLinks={false}
         localization={{
           variables: {
             sign_in: {
@@ -69,6 +69,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
               button_label: 'Sign In',
               loading_button_label: 'Signing in...',
               social_provider_text: 'Sign in with {{provider}}',
+              link_text: 'Already have an account? Sign in',
             },
             forgotten_password: {
               email_label: 'Email',
@@ -92,7 +93,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         magicLink={false}
         socialLayout="horizontal"
         theme="default"
-        disableSignUp={true}
       />
     </AuthContainer>
   );
