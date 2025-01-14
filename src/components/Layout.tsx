@@ -18,6 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 export function Layout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -28,10 +29,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, name')
           .eq('id', user.id)
           .single();
         setUserRole(profile?.role || null);
+        setUserName(profile?.name || null);
       }
     };
     getUser();
@@ -41,12 +43,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, name')
           .eq('id', session.user.id)
           .single();
         setUserRole(profile?.role || null);
+        setUserName(profile?.name || null);
       } else {
         setUserRole(null);
+        setUserName(null);
       }
     });
 
@@ -68,7 +72,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="flex items-center gap-2">
           <UserIcon className="h-4 w-4" />
-          <span className="hidden sm:inline">{user?.email}</span>
+          <span className="hidden sm:inline">{userName || user?.email}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
