@@ -3,7 +3,6 @@ import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 import { 
   listeners, 
   memoryState, 
-  toast, 
   dispatch 
 } from "./use-toast-state"
 
@@ -20,6 +19,8 @@ type Toast = Partial<ToasterToast> & {
   variant?: "default" | "destructive"
 }
 
+const TOAST_TIMEOUT = 60000; // 1 minute in milliseconds
+
 export function useToast() {
   const [state, setState] = React.useState(memoryState)
 
@@ -32,6 +33,36 @@ export function useToast() {
       }
     }
   }, [])
+
+  const toast = React.useCallback(
+    ({ ...props }: Toast) => {
+      const id = Math.random().toString(36).substring(2, 9);
+      dispatch({
+        type: "ADD_TOAST",
+        toast: {
+          ...props,
+          id,
+          open: true,
+        },
+      });
+
+      // Auto dismiss after TOAST_TIMEOUT
+      setTimeout(() => {
+        dispatch({ type: "DISMISS_TOAST", toastId: id });
+      }, TOAST_TIMEOUT);
+
+      return {
+        id,
+        dismiss: () => dispatch({ type: "DISMISS_TOAST", toastId: id }),
+        update: (props: ToasterToast) =>
+          dispatch({
+            type: "UPDATE_TOAST",
+            toast: { ...props, id },
+          }),
+      };
+    },
+    []
+  );
 
   return {
     ...state,
