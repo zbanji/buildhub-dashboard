@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Trash2, Edit2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { NewClientDialog } from "@/components/admin/NewClientDialog";
 
 interface Client {
   id: string;
@@ -103,84 +104,87 @@ export function ClientManagement() {
   };
 
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle>Client Management</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {clients.map((client) => (
-            <Card key={client.id} className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    {client.name || "Unnamed Client"}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{client.email}</p>
-                </div>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        setSelectedClient(client);
-                        setEditName(client.name || "");
-                        setIsEditing(true);
-                      }}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Edit Client Information</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Name</label>
-                        <Input
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          placeholder="Enter client name"
-                        />
-                      </div>
-                      <Button onClick={handleUpdateClient} className="w-full">
-                        Update Client
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">Projects</h4>
-                {client.projects.length > 0 ? (
-                  <div className="space-y-2">
-                    {client.projects.map((project) => (
-                      <div
-                        key={project.id}
-                        className="flex items-center justify-between p-2 bg-muted rounded-lg"
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Client Management</h1>
+        <NewClientDialog />
+      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-6">
+            {clients.map((client) => (
+              <Card key={client.id} className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      {client.name || "Unnamed Client"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{client.email}</p>
+                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedClient(client);
+                          setEditName(client.name || "");
+                          setIsEditing(true);
+                        }}
                       >
-                        <span className="text-sm">{project.name}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteProject(project.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Edit Client Information</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Name</label>
+                          <Input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            placeholder="Enter client name"
+                          />
+                        </div>
+                        <Button onClick={handleUpdateClient} className="w-full">
+                          Update Client
                         </Button>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No projects</p>
-                )}
-              </div>
-            </Card>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Projects</h4>
+                  {client.projects.length > 0 ? (
+                    <div className="space-y-2">
+                      {client.projects.map((project) => (
+                        <div
+                          key={project.id}
+                          className="flex items-center justify-between p-2 bg-muted rounded-lg"
+                        >
+                          <span className="text-sm">{project.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteProject(project.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No projects</p>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 }
