@@ -1,5 +1,5 @@
 export interface Profile {
-  id?: string;
+  id: string;
   email: string | null;
   role: 'admin' | 'client';
   name: string | null;
