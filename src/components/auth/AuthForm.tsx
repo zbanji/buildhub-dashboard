@@ -92,8 +92,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         magicLink={false}
         socialLayout="horizontal"
         theme="default"
-        onlyThirdPartyProviders={false}
-        redirectIfLoggedIn={true}
         disableSignUp={true}
       />
     </AuthContainer>
