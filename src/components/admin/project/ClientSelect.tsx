@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 interface Client {
   id: string;
   email: string;
-  name: string | null;
 }
 
 interface ClientSelectProps {
@@ -32,8 +31,7 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
         .from('profiles')
         .select(`
           id,
-          email,
-          name
+          email
         `)
         .eq('role', 'client');
 
@@ -49,8 +47,7 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
       // Map the profiles to our Client interface
       const clientList = clientProfiles.map(profile => ({
         id: profile.id,
-        email: profile.email || 'No email',
-        name: profile.name
+        email: profile.email || 'No email'
       }));
 
       setClients(clientList);
@@ -76,7 +73,7 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
         <SelectContent>
           {clients.map((client) => (
             <SelectItem key={client.id} value={client.id}>
-              {client.name || client.email}
+              {client.email}
             </SelectItem>
           ))}
         </SelectContent>
