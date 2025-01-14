@@ -7,6 +7,7 @@ import { EditProjectDialog } from "@/components/admin/EditProjectDialog";
 import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
 import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
 import { UploadMediaButton } from "@/components/admin/projects/UploadMediaButton";
+import { ClientManagement } from "@/components/admin/clients/ClientManagement";
 
 export default function AdminProjects() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
@@ -26,6 +27,7 @@ export default function AdminProjects() {
               onProjectSelect={setSelectedProject}
               onProjectUpdate={refetchProjects}
             />
+            <ClientManagement />
           </div>
           <div className="space-y-6">
             {selectedProject && (
