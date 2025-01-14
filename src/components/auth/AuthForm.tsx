@@ -60,7 +60,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         }}
         providers={[]}
         redirectTo={redirectTo}
-        showLinks={false}
+        showLinks={true}
         localization={{
           variables: {
             sign_in: {
@@ -88,6 +88,10 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         }}
         queryParams={{
           password_reset_redirect_to: resetPasswordRedirectTo,
+        }}
+        options={{
+          signUpLink: false,
+          forgotPasswordLink: true,
         }}
       />
     </AuthContainer>
