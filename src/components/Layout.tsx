@@ -1,19 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User as UserIcon, Settings, LogOut, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { UserMenu } from "./UserMenu";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -59,41 +52,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    // Redirect based on user role
     if (userRole === 'admin') {
       navigate('/admin/login');
     } else {
       navigate('/client/login');
     }
   };
-
-  const UserMenu = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="flex items-center gap-2">
-          <UserIcon className="h-4 w-4" />
-          <span className="hidden sm:inline">{userName || user?.email}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <UserIcon className="mr-2 h-4 w-4" />
-          Profile
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -116,7 +80,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             ) : null}
             <h1 className="text-xl sm:text-2xl font-bold text-primary">BuildHub</h1>
             <div className="flex items-center gap-4">
-              {user && <UserMenu />}
+              {user && <UserMenu user={user} userName={userName} onSignOut={handleSignOut} />}
             </div>
           </div>
         </div>

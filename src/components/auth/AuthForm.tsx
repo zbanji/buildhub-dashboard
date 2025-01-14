@@ -17,7 +17,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
   const { message, error, setError } = useAuthMessages(propError);
   
-  // Remove port separator from URLs
   const baseUrl = window.location.origin;
   const redirectTo = `${baseUrl}/client`;
   const resetPasswordRedirectTo = `${baseUrl}/client/login?type=recovery`;
@@ -28,7 +27,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       setView("update_password");
     }
 
-    // Listen for auth state changes and errors
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setView("update_password");
@@ -62,7 +60,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         }}
         providers={[]}
         redirectTo={redirectTo}
-        showLinks={true}
+        showLinks={false}
         localization={{
           variables: {
             sign_in: {
@@ -71,7 +69,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
               button_label: 'Sign In',
               loading_button_label: 'Signing in...',
               social_provider_text: 'Sign in with {{provider}}',
-              link_text: "Already have an account? Sign in",
             },
             forgotten_password: {
               email_label: 'Email',
