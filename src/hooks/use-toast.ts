@@ -21,7 +21,7 @@ type Toast = Partial<ToasterToast> & {
 
 const TOAST_TIMEOUT = 60000; // 1 minute in milliseconds
 
-function useToast() {
+export function useToast() {
   const [state, setState] = React.useState(memoryState)
 
   React.useEffect(() => {
@@ -34,8 +34,9 @@ function useToast() {
     }
   }, [])
 
-  const toast = React.useCallback(
-    ({ ...props }: Toast) => {
+  return {
+    ...state,
+    toast: ({ ...props }: Toast) => {
       const id = Math.random().toString(36).substring(2, 9);
       dispatch({
         type: "ADD_TOAST",
@@ -61,18 +62,35 @@ function useToast() {
           }),
       };
     },
-    []
-  );
-
-  return {
-    ...state,
-    toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   }
 }
 
-// Create a singleton instance of the toast function
-const { toast } = useToast()
+// Export a simplified toast function for direct usage
+export const toast = (props: Toast) => {
+  const id = Math.random().toString(36).substring(2, 9);
+  dispatch({
+    type: "ADD_TOAST",
+    toast: {
+      ...props,
+      id,
+      open: true,
+    },
+  });
 
-export { useToast, toast }
+  setTimeout(() => {
+    dispatch({ type: "DISMISS_TOAST", toastId: id });
+  }, TOAST_TIMEOUT);
+
+  return {
+    id,
+    dismiss: () => dispatch({ type: "DISMISS_TOAST", toastId: id }),
+    update: (props: ToasterToast) =>
+      dispatch({
+        type: "UPDATE_TOAST",
+        toast: { ...props, id },
+      }),
+  };
+};
+
 export type { Toast }
