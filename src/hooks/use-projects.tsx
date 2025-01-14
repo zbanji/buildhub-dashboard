@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Project, Profile } from "@/types/project";
+import { Project } from "@/types/project";
 
 export function useProjects() {
   const { toast } = useToast();
@@ -34,7 +34,10 @@ export function useProjects() {
         return [];
       }
 
-      return projectsData as Project[];
+      return projectsData.map(project => ({
+        ...project,
+        profiles: project.profiles[0]
+      })) as Project[];
     }
   });
 }

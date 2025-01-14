@@ -14,8 +14,10 @@ export function useProjectMessages(projectId: string | null) {
           content,
           created_at,
           profiles!messages_sender_id_fkey(
+            id,
             email,
-            role
+            role,
+            name
           )
         `)
         .eq('project_id', projectId)
@@ -26,7 +28,10 @@ export function useProjectMessages(projectId: string | null) {
         return [];
       }
 
-      return messagesData as Message[];
+      return messagesData.map(message => ({
+        ...message,
+        profiles: message.profiles[0]
+      })) as Message[];
     }
   });
 }

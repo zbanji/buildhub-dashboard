@@ -1,4 +1,5 @@
 export interface Profile {
+  id?: string;
   email: string | null;
   role: 'admin' | 'client';
   name: string | null;
@@ -10,14 +11,14 @@ export interface Project {
   status: string;
   client_id: string;
   budget: number;
-  profiles?: Profile | null;
+  profiles: Profile;
 }
 
 export interface Message {
   id: string;
   content: string;
   created_at: string;
-  profiles?: Profile | null;
+  profiles: Profile;
 }
 
 export interface Milestone {
