@@ -19,7 +19,10 @@ export function useAuthState({ expectedRole, successPath }: UseAuthStateProps) {
     const initAuth = async () => {
       const session = await checkSession();
       
-      if (!session) return;
+      if (!session) {
+        // If no session, we're already redirected by checkSession
+        return;
+      }
 
       try {
         const hasRole = await checkUserRole(session.user.id, expectedRole);
