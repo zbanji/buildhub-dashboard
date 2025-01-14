@@ -19,6 +19,7 @@ export function useProjects() {
           budget,
           profiles!projects_client_id_fkey (
             email,
+            name,
             role
           )
         `);
