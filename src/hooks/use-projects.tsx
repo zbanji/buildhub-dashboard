@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Project } from "@/types/project";
+import { Project, Profile } from "@/types/project";
 
 export function useProjects() {
   const { toast } = useToast();
@@ -18,10 +18,8 @@ export function useProjects() {
           client_id,
           budget,
           profiles!projects_client_id_fkey (
-            id,
             email,
-            role,
-            name
+            role
           )
         `);
 
@@ -34,10 +32,7 @@ export function useProjects() {
         return [];
       }
 
-      return projectsData.map(project => ({
-        ...project,
-        profiles: project.profiles[0]
-      })) as Project[];
+      return projectsData as Project[];
     }
   });
 }

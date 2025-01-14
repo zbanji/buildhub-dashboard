@@ -14,95 +14,54 @@ import { User as UserIcon, Settings, LogOut, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useToast } from "@/hooks/use-toast";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { toast } = useToast();
 
   useEffect(() => {
     const getUser = async () => {
-      try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError) {
-          if (userError.message.includes('session_not_found')) {
-            await supabase.auth.signOut();
-            navigate('/admin/login');
-            return;
-          }
-          throw userError;
-        }
-
-        if (!user) {
-          navigate('/admin/login');
-          return;
-        }
-
-        setUser(user);
-        
-        const { data: profile, error: profileError } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (user) {
+        const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
-          
-        if (profileError) {
-          toast({
-            title: "Error fetching profile",
-            description: profileError.message,
-            variant: "destructive",
-          });
-          return;
-        }
-
         setUserRole(profile?.role || null);
-      } catch (error) {
-        console.error('Auth error:', error);
-        toast({
-          title: "Authentication Error",
-          description: error instanceof Error ? error.message : "Please sign in again",
-          variant: "destructive",
-        });
-        navigate('/admin/login');
-      } finally {
-        setIsLoading(false);
       }
     };
-
     getUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setUserRole(null);
-        navigate('/admin/login');
-      } else if (session?.user) {
-        setUser(session.user);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
+      setUser(session?.user || null);
+      if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
           .single();
         setUserRole(profile?.role || null);
+      } else {
+        setUserRole(null);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate('/admin/login');
+    // Redirect based on user role
+    if (userRole === 'admin') {
+      navigate('/admin/login');
+    } else {
+      navigate('/client/login');
+    }
   };
-
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
 
   const UserMenu = () => (
     <DropdownMenu>
