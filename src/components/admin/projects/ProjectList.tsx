@@ -21,9 +21,9 @@ export function ProjectList({
   onProjectSelect,
   onProjectUpdate 
 }: ProjectListProps) {
-  // Group projects by client name, using "Unknown Client" if no name is available
+  // Group projects by client name, using client's actual name from profiles
   const projectsByClient = projects.reduce((acc: ProjectsByClient, project) => {
-    const clientName = project.profiles?.name || "Unknown Client";
+    const clientName = project.profiles?.name || project.profiles?.email || "Unknown Client";
     if (!acc[clientName]) {
       acc[clientName] = [];
     }
