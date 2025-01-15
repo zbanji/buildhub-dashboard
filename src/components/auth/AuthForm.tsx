@@ -57,7 +57,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
               .from('profiles')
               .select('role')
               .eq('id', session.user.id)
-              .maybeSingle();
+              .single();
 
             if (profileError) {
               console.error("Error fetching profile:", profileError);
