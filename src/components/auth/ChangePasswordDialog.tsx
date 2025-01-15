@@ -6,13 +6,17 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Lock } from "lucide-react";
 
-export function ChangePasswordDialog() {
+interface ChangePasswordDialogProps {
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function ChangePasswordDialog({ onOpenChange }: ChangePasswordDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -44,34 +48,20 @@ export function ChangePasswordDialog() {
         return;
       }
 
-      if (currentPassword === newPassword) {
-        toast({
-          title: "Error",
-          description: "New password must be different from your current password",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) {
-        throw new Error("User email not found");
-      }
-
-      // Update the password directly without re-authentication
-      const { error: updateError } = await supabase.auth.updateUser({
+      // Update the password
+      const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (updateError) {
-        if (updateError.message.includes("same_password")) {
+      if (error) {
+        if (error.message.includes("same_password")) {
           toast({
             title: "Error",
             description: "New password must be different from your current password",
             variant: "destructive",
           });
         } else {
-          throw updateError;
+          throw error;
         }
         return;
       }
@@ -86,6 +76,7 @@ export function ChangePasswordDialog() {
       setNewPassword("");
       setConfirmPassword("");
       setIsOpen(false);
+      if (onOpenChange) onOpenChange(false);
     } catch (error) {
       console.error("Password change error:", error);
       toast({
@@ -98,16 +89,27 @@ export function ChangePasswordDialog() {
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (onOpenChange) onOpenChange(open);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Change Password</Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleOpenChange(true)}
+        className="w-full justify-start"
+      >
+        <Lock className="mr-2 h-4 w-4" />
+        Change Password
+      </Button>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Change Password</DialogTitle>
           <DialogDescription>
-            Enter your current password and new password below. Password must be at least 6 characters long and different from your current password.
+            Enter your new password below. Password must be at least 6 characters long and different from your current password.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -151,7 +153,7 @@ export function ChangePasswordDialog() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsOpen(false)}
+              onClick={() => handleOpenChange(false)}
             >
               Cancel
             </Button>
