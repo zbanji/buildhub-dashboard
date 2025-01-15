@@ -29,11 +29,18 @@ export function NewClientDialog() {
       console.log("Starting client creation process...");
       
       // First check if user exists
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: checkError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
         .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing user:', checkError);
+        toast.error("Error checking user existence");
+        setLoading(false);
+        return;
+      }
 
       if (existingUser) {
         toast.error("A user with this email already exists");
@@ -42,7 +49,7 @@ export function NewClientDialog() {
       }
 
       // Create the user with role metadata
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const signUpResponse = await supabase.auth.signUp({
         email,
         password: 'Buildhub123', // Default password
         options: {
@@ -54,19 +61,19 @@ export function NewClientDialog() {
         }
       });
 
-      if (signUpError) {
-        console.error('Sign up error:', signUpError);
+      if (signUpResponse.error) {
+        console.error('Sign up error:', signUpResponse.error);
         
-        if (signUpError.message.includes('already registered')) {
+        if (signUpResponse.error.message.includes('already registered')) {
           toast.error("A user with this email already exists");
         } else {
-          toast.error(`Failed to create user: ${signUpError.message}`);
+          toast.error(`Failed to create user: ${signUpResponse.error.message}`);
         }
         return;
       }
 
-      if (data?.user) {
-        console.log("User created successfully:", data.user);
+      if (signUpResponse.data?.user) {
+        console.log("User created successfully:", signUpResponse.data.user);
         toast.success("Client has been added successfully. They will receive an email to set their password.");
         setEmail("");
         setFirstName("");
