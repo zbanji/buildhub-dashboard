@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProjectContentProps {
   projectId: string;
+  projectName: string;  // Add this prop
   milestones: any[];
   selectedMilestone: string | null;
   selectedMilestoneDetails: any;
@@ -19,6 +20,7 @@ interface ProjectContentProps {
 
 export function ProjectContent({
   projectId,
+  projectName,  // Add this prop
   milestones,
   selectedMilestone,
   selectedMilestoneDetails,
@@ -41,6 +43,11 @@ export function ProjectContent({
 
   return (
     <div className="space-y-6">
+      {/* Project title for mobile */}
+      {isMobile && (
+        <h2 className="text-2xl font-bold tracking-tight">{projectName}</h2>
+      )}
+      
       {/* Mobile helper text */}
       <div className="md:hidden">
         <Alert>

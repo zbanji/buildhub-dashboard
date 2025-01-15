@@ -91,6 +91,7 @@ export function ProjectDetails({ project }: ProjectDetailsProps) {
       />
       <ProjectContent
         projectId={project.id}
+        projectName={project.name}
         milestones={milestones}
         selectedMilestone={selectedMilestone}
         selectedMilestoneDetails={selectedMilestoneDetails}
