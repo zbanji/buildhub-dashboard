@@ -26,7 +26,7 @@ export function NewClientDialog() {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
-        password: Math.random().toString(36).slice(-8),
+        password: 'Buildhub123', // Fixed default password
         options: {
           data: {
             first_name: firstName,
