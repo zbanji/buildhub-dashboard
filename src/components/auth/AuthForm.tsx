@@ -39,6 +39,8 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         if (session) {
           window.location.href = redirectTo;
         }
+      } else if (event === 'SIGNED_OUT') {
+        setError("");
       }
     });
 
@@ -53,7 +55,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   const handleAuthError = (error: AuthError) => {
     let errorMessage = "An error occurred during authentication.";
     
-    if (error.message.includes("invalid_credentials")) {
+    if (error.message.includes("invalid_credentials") || error.message.includes("Invalid login credentials")) {
       errorMessage = "Invalid email or password. Please check your credentials and try again.";
     } else if (error.message.includes("Email not confirmed")) {
       errorMessage = "Please verify your email address before signing in.";
