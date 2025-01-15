@@ -5,10 +5,10 @@ export async function checkUserRole(userId: string, expectedRole: 'admin' | 'cli
     .from("profiles")
     .select("role")
     .eq("id", userId)
-    .maybeSingle();
+    .single();
 
   if (profileError) throw profileError;
-  if (!profileData) return false;
+  if (!profileData) throw new Error("User profile not found");
 
   return profileData.role === expectedRole;
 }

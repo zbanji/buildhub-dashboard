@@ -7,8 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { UserMenu } from "./UserMenu";
-import { useToast } from "@/hooks/use-toast";
-import { cleanupSession } from "@/utils/auth-cleanup";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -16,108 +14,47 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState<string | null>(null);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { toast } = useToast();
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        // Get the current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-
-        // Update user state based on session
-        const currentUser = session?.user || null;
-        setUser(currentUser);
-
-        if (currentUser) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role, name')
-            .eq('id', currentUser.id)
-            .maybeSingle();
-
-          if (profileError) throw profileError;
-          
-          setUserRole(profile?.role || null);
-          setUserName(profile?.name || null);
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        // Clear local state on error
-        clearLocalState();
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, name')
+          .eq('id', user.id)
+          .single();
+        setUserRole(profile?.role || null);
+        setUserName(profile?.name || null);
       }
     };
+    getUser();
 
-    // Initialize auth state
-    initializeAuth();
-
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session);
-      
-      if (event === 'SIGNED_OUT') {
-        clearLocalState();
-        return;
-      }
-
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
+      setUser(session?.user || null);
       if (session?.user) {
-        setUser(session.user);
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role, name')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (profileError) throw profileError;
-          
-          setUserRole(profile?.role || null);
-          setUserName(profile?.name || null);
-        } catch (error) {
-          console.error('Profile fetch error:', error);
-          clearLocalState();
-        }
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, name')
+          .eq('id', session.user.id)
+          .single();
+        setUserRole(profile?.role || null);
+        setUserName(profile?.name || null);
+      } else {
+        setUserRole(null);
+        setUserName(null);
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  const clearLocalState = () => {
-    setUser(null);
-    setUserRole(null);
-    setUserName(null);
-  };
-
   const handleSignOut = async () => {
-    try {
-      // First clear local state and session data
-      clearLocalState();
-      await cleanupSession();
-      
-      // Then attempt to sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Sign out error:', error);
-      }
-      
-      // Show success message
-      toast({
-        title: "Signed out",
-        description: "You have been signed out successfully.",
-      });
-
-      // Navigate based on previous role
-      if (userRole === 'admin') {
-        navigate('/admin/login');
-      } else {
-        navigate('/client/login');
-      }
-    } catch (error) {
-      console.error('Sign out error:', error);
-      // Even if sign out fails, we still want to clear state and redirect
+    await supabase.auth.signOut();
+    if (userRole === 'admin') {
+      navigate('/admin/login');
+    } else {
       navigate('/client/login');
     }
   };
