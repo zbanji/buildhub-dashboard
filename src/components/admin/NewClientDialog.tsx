@@ -28,7 +28,7 @@ export function NewClientDialog() {
     try {
       console.log("Starting client creation process...");
       
-      // First check if user exists using maybeSingle() instead of single()
+      // First check if user exists
       const { data: existingUser, error: checkError } = await supabase
         .from('profiles')
         .select('id')
@@ -38,43 +38,35 @@ export function NewClientDialog() {
       if (checkError) {
         console.error('Error checking existing user:', checkError);
         toast.error("Error checking user existence");
-        setLoading(false);
         return;
       }
 
       if (existingUser) {
         toast.error("A user with this email already exists");
-        setLoading(false);
         return;
       }
 
-      // Create the user with explicit role metadata
-      const signUpResponse = await supabase.auth.signUp({
+      // Create the user with minimal metadata first
+      const { data: { user }, error: signUpError } = await supabase.auth.signUp({
         email,
         password: 'Buildhub123', // Default password
         options: {
           data: {
             first_name: firstName,
             last_name: lastName,
-            role: 'client',
-            email: email // Add email to metadata
+            role: 'client'
           }
         }
       });
 
-      if (signUpResponse.error) {
-        console.error('Sign up error:', signUpResponse.error);
-        
-        if (signUpResponse.error.message.includes('already registered')) {
-          toast.error("A user with this email already exists");
-        } else {
-          toast.error(`Failed to create user: ${signUpResponse.error.message}`);
-        }
+      if (signUpError) {
+        console.error('Sign up error:', signUpError);
+        toast.error(signUpError.message);
         return;
       }
 
-      if (signUpResponse.data?.user) {
-        console.log("User created successfully:", signUpResponse.data.user);
+      if (user) {
+        console.log("User created successfully:", user);
         toast.success("Client has been added successfully. They will receive an email to set their password.");
         setEmail("");
         setFirstName("");
