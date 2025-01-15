@@ -65,23 +65,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
               throw profileError;
             }
 
-            if (!profile) {
-              console.log("No profile found, creating new profile");
-              const { error: insertError } = await supabase
-                .from('profiles')
-                .insert([{ 
-                  id: session.user.id, 
-                  role: 'client',
-                  email: session.user.email 
-                }]);
-              
-              if (insertError) {
-                console.error("Error creating profile:", insertError);
-                throw insertError;
-              }
-            }
-
-            console.log("Profile fetched/created successfully:", profile);
+            console.log("Profile fetched successfully:", profile);
             if (profile?.role === 'admin') {
               navigate('/admin/projects');
             } else {
@@ -114,8 +98,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     console.error("Auth error details:", {
       message: error.message,
       status: error.status,
-      name: error.name,
-      code: error instanceof Error ? error.message : 'Unknown error'
+      name: error.name
     });
     
     let errorMessage = "An error occurred during authentication.";
@@ -130,10 +113,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       errorMessage = "No account found with these credentials.";
     } else if (error.message.includes("Failed to fetch")) {
       errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
-    } else if (error.message.includes("rate limit")) {
-      errorMessage = "Too many login attempts. Please wait a moment before trying again.";
-    } else if (error.message.includes("password")) {
-      errorMessage = "Invalid password format. Please check your password and try again.";
     }
     
     setError(errorMessage);
@@ -151,10 +130,42 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
           variables: {
             default: {
               colors: {
-                brand: '#2563eb',
+                brand: '#1E40AF',
                 brandAccent: '#1d4ed8',
-              }
+                brandButtonText: 'white',
+                defaultButtonBackground: '#f8fafc',
+                defaultButtonBackgroundHover: '#f1f5f9',
+                inputBackground: 'white',
+                inputBorder: '#e2e8f0',
+                inputBorderHover: '#cbd5e1',
+                inputBorderFocus: '#1E40AF',
+              },
+              borderWidths: {
+                buttonBorderWidth: '1px',
+                inputBorderWidth: '1px',
+              },
+              radii: {
+                borderRadiusButton: '0.5rem',
+                buttonBorderRadius: '0.5rem',
+                inputBorderRadius: '0.5rem',
+              },
+              space: {
+                inputPadding: '0.75rem',
+                buttonPadding: '0.75rem',
+              },
+              fonts: {
+                bodyFontFamily: `'Inter', sans-serif`,
+                buttonFontFamily: `'Inter', sans-serif`,
+                inputFontFamily: `'Inter', sans-serif`,
+                labelFontFamily: `'Inter', sans-serif`,
+              },
             }
+          },
+          className: {
+            container: 'w-full',
+            button: 'w-full px-4 py-2 rounded-lg font-medium transition-colors',
+            input: 'w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow',
+            label: 'text-sm font-medium text-gray-700',
           }
         }}
         providers={[]}
