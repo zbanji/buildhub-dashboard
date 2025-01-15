@@ -25,12 +25,18 @@ export function NewClientDialog() {
     setLoading(true);
 
     try {
-      // First check if user already exists
-      const { data: existingUser } = await supabase
+      // First check if user already exists using maybeSingle() instead of single()
+      const { data: existingUser, error: queryError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
-        .single();
+        .maybeSingle();
+
+      if (queryError) {
+        console.error('Error checking existing user:', queryError);
+        toast.error("Error checking user existence. Please try again.");
+        return;
+      }
 
       if (existingUser) {
         toast.error("A user with this email already exists");
@@ -50,7 +56,14 @@ export function NewClientDialog() {
         }
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        if (signUpError.message.includes('User already registered')) {
+          toast.error("A user with this email already exists");
+        } else {
+          throw signUpError;
+        }
+        return;
+      }
 
       if (data?.user) {
         toast.success("Client has been added successfully. They will receive an email to set their password.");
@@ -61,11 +74,7 @@ export function NewClientDialog() {
       }
     } catch (error: any) {
       console.error('Error adding client:', error);
-      if (error.message.includes('User already registered')) {
-        toast.error("A user with this email already exists");
-      } else {
-        toast.error(error.message || "Failed to add client. Please try again.");
-      }
+      toast.error(error.message || "Failed to add client. Please try again.");
     } finally {
       setLoading(false);
     }
