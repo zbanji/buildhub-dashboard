@@ -48,7 +48,7 @@ export function NewClientDialog() {
         return;
       }
 
-      // Create the user with role metadata
+      // Create the user with explicit role metadata
       const signUpResponse = await supabase.auth.signUp({
         email,
         password: 'Buildhub123', // Default password
@@ -56,7 +56,8 @@ export function NewClientDialog() {
           data: {
             first_name: firstName,
             last_name: lastName,
-            role: 'client'
+            role: 'client',
+            email: email // Add email to metadata
           }
         }
       });
