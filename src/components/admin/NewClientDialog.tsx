@@ -12,7 +12,6 @@ import { useState } from "react";
 import { UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User } from "@supabase/supabase-js";
 
 export function NewClientDialog() {
   const [loading, setLoading] = useState(false);
@@ -26,24 +25,8 @@ export function NewClientDialog() {
     setLoading(true);
 
     try {
-      // First check if the user exists in auth system
-      const { data: { users }, error: adminError } = await supabase.auth.admin.listUsers();
-      
-      if (adminError) {
-        console.error('Error checking existing users:', adminError);
-        toast.error("Error checking user existence. Please try again.");
-        return;
-      }
-
-      // Type assertion to ensure users is an array of User objects
-      const userExists = (users as User[])?.some(user => user.email === email);
-      if (userExists) {
-        toast.error("A user with this email already exists");
-        return;
-      }
-
-      // Create new user
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // Try to create the user - this will fail if the email exists
+      const { data, error } = await supabase.auth.signUp({
         email,
         password: 'Buildhub123', // Fixed default password
         options: {
@@ -55,9 +38,14 @@ export function NewClientDialog() {
         }
       });
 
-      if (signUpError) {
-        console.error('Sign up error:', signUpError);
-        toast.error("Failed to create user. Please try again.");
+      if (error) {
+        // Check if error is due to user already existing
+        if (error.message.includes('already registered')) {
+          toast.error("A user with this email already exists");
+        } else {
+          console.error('Sign up error:', error);
+          toast.error("Failed to create user. Please try again.");
+        }
         return;
       }
 
