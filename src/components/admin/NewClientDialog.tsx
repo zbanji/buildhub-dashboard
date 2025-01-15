@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -18,6 +19,7 @@ export function NewClientDialog() {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [open, setOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,26 +33,32 @@ export function NewClientDialog() {
           data: {
             first_name: firstName,
             last_name: lastName,
-            role: 'client'
+            role: 'client',
+            name: `${firstName} ${lastName}`.trim()
           }
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Signup error:", error);
+        throw error;
+      }
 
       toast.success("Client has been added successfully");
       setEmail("");
       setFirstName("");
       setLastName("");
-    } catch (error) {
-      toast.error("Failed to add client. Please try again.");
+      setOpen(false);
+    } catch (error: any) {
+      console.error("Error details:", error);
+      toast.error(error.message || "Failed to add client. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <UserPlus className="mr-2 h-4 w-4" />
@@ -60,6 +68,9 @@ export function NewClientDialog() {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
+          <DialogDescription>
+            Create a new client account. They will receive an email to set their password.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
