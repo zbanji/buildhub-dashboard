@@ -66,11 +66,18 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
             }
 
             if (!profile) {
-              console.error("No profile found for user");
-              throw new Error("User profile not found");
+              console.log("No profile found, creating new profile");
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert([{ id: session.user.id, role: 'client' }]);
+              
+              if (insertError) {
+                console.error("Error creating profile:", insertError);
+                throw insertError;
+              }
             }
 
-            console.log("Profile fetched successfully:", profile);
+            console.log("Profile fetched/created successfully:", profile);
             window.location.href = redirectTo;
           } catch (err) {
             console.error("Error during sign in:", err);
@@ -107,8 +114,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       errorMessage = "Please verify your email address before signing in.";
     } else if (error.message.includes("User not found")) {
       errorMessage = "No account found with these credentials.";
-    } else if (error.message.includes("over_email_send_rate_limit")) {
-      errorMessage = "Please wait before requesting another password reset.";
     } else if (error.message.includes("Failed to fetch")) {
       errorMessage = "Network error. Please check your connection and try again.";
     }
