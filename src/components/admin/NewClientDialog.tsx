@@ -28,14 +28,14 @@ export function NewClientDialog() {
     try {
       console.log("Starting client creation process...");
       
-      // First check if user exists
+      // First check if user exists using maybeSingle() instead of single()
       const { data: existingUser, error: checkError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
-      if (checkError && checkError.code !== 'PGRST116') {
+      if (checkError) {
         console.error('Error checking existing user:', checkError);
         toast.error("Error checking user existence");
         setLoading(false);
