@@ -46,8 +46,8 @@ export function NewClientDialog() {
         return;
       }
 
-      // Create the user with minimal metadata first
-      const { data: { user }, error: signUpError } = await supabase.auth.signUp({
+      // Create the user
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password: 'Buildhub123', // Default password
         options: {
@@ -55,7 +55,8 @@ export function NewClientDialog() {
             first_name: firstName,
             last_name: lastName,
             role: 'client'
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/client/login`
         }
       });
 
@@ -65,8 +66,8 @@ export function NewClientDialog() {
         return;
       }
 
-      if (user) {
-        console.log("User created successfully:", user);
+      if (data.user) {
+        console.log("User created successfully:", data.user);
         toast.success("Client has been added successfully. They will receive an email to set their password.");
         setEmail("");
         setFirstName("");
