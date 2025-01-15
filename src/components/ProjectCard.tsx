@@ -18,13 +18,15 @@ interface ProjectCardProps {
 export function ProjectCard({ project, onClick }: ProjectCardProps) {
   return (
     <Card 
-      className="hover:shadow-lg transition-shadow cursor-pointer w-full mb-4" 
+      className="hover-scale glass-card w-full mb-4" 
       onClick={onClick}
     >
       <CardContent className="p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1">
-            <h3 className="font-semibold text-lg">{project.name}</h3>
+            <h3 className="font-semibold text-lg bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+              {project.name}
+            </h3>
             <span className="text-sm text-muted-foreground">{project.status}</span>
           </div>
           
@@ -34,25 +36,28 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
                 <span className="text-sm text-muted-foreground">Progress</span>
                 <span className="text-sm font-medium">{project.progress}%</span>
               </div>
-              <Progress value={project.progress} />
+              <Progress 
+                value={project.progress} 
+                className="h-2 bg-secondary"
+              />
             </div>
           </div>
 
           <div className="flex flex-col gap-2 flex-1">
             <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="h-4 w-4 text-primary" />
               <span className="text-sm">{project.budget}</span>
             </div>
             {project.squareFootage && (
               <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <Building2 className="h-4 w-4 text-primary" />
                 <span className="text-sm">{project.squareFootage} sq ft</span>
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            <CalendarDays className="h-4 w-4 text-primary" />
             <span className="text-sm">{project.completionDate}</span>
           </div>
         </div>
