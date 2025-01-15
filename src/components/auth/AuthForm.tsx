@@ -23,17 +23,21 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   const resetPasswordRedirectTo = `${baseUrl}/client/login?type=recovery`;
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setView("update_password");
-        const lastError = (supabase.auth.getSession() as any)?.error;
-        if (lastError?.message?.includes("over_email_send_rate_limit")) {
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError?.message?.includes("over_email_send_rate_limit")) {
           setError("Please wait 60 seconds before requesting another password reset.");
         }
       } else if (event === 'USER_UPDATED') {
-        const { error } = supabase.auth.getSession();
-        if (error) {
-          handleAuthError(error);
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          handleAuthError(sessionError);
+        }
+      } else if (event === 'SIGNED_IN') {
+        if (session) {
+          window.location.href = redirectTo;
         }
       }
     });
@@ -44,7 +48,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     }
 
     return () => subscription.unsubscribe();
-  }, [searchParams, setError]);
+  }, [searchParams, setError, redirectTo]);
 
   const handleAuthError = (error: AuthError) => {
     let errorMessage = "An error occurred during authentication.";
