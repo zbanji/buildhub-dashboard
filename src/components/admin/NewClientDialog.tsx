@@ -12,6 +12,7 @@ import { useState } from "react";
 import { UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { User } from "@supabase/supabase-js";
 
 export function NewClientDialog() {
   const [loading, setLoading] = useState(false);
@@ -34,7 +35,8 @@ export function NewClientDialog() {
         return;
       }
 
-      const userExists = users?.some(user => user.email === email);
+      // Type assertion to ensure users is an array of User objects
+      const userExists = (users as User[])?.some(user => user.email === email);
       if (userExists) {
         toast.error("A user with this email already exists");
         return;
