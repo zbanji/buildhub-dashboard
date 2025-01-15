@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { UserMenu } from "./UserMenu";
+import { useToast } from "@/hooks/use-toast";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -14,6 +15,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState<string | null>(null);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   useEffect(() => {
     const getUser = async () => {
@@ -24,7 +26,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           .from('profiles')
           .select('role, name')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
         setUserRole(profile?.role || null);
         setUserName(profile?.name || null);
       }
@@ -38,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           .from('profiles')
           .select('role, name')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
         setUserRole(profile?.role || null);
         setUserName(profile?.name || null);
       } else {
@@ -51,10 +53,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    if (userRole === 'admin') {
-      navigate('/admin/login');
-    } else {
+    try {
+      await supabase.auth.signOut();
+      if (userRole === 'admin') {
+        navigate('/admin/login');
+      } else {
+        navigate('/client/login');
+      }
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Even if sign out fails, we should clear local state and redirect
+      setUser(null);
+      setUserRole(null);
+      setUserName(null);
+      toast({
+        title: "Sign out",
+        description: "You have been signed out successfully.",
+      });
       navigate('/client/login');
     }
   };
