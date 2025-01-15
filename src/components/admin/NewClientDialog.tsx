@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -25,10 +26,25 @@ export function NewClientDialog() {
     setLoading(true);
 
     try {
-      // Try to create the user - this will fail if the email exists
-      const { data, error } = await supabase.auth.signUp({
+      console.log("Starting client creation process...");
+      
+      // First check if user exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (existingUser) {
+        toast.error("A user with this email already exists");
+        setLoading(false);
+        return;
+      }
+
+      // Create the user with role metadata
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
-        password: 'Buildhub123', // Fixed default password
+        password: 'Buildhub123', // Default password
         options: {
           data: {
             first_name: firstName,
@@ -38,27 +54,31 @@ export function NewClientDialog() {
         }
       });
 
-      if (error) {
-        // Check if error is due to user already existing
-        if (error.message.includes('already registered')) {
+      if (signUpError) {
+        console.error('Sign up error:', signUpError);
+        
+        if (signUpError.message.includes('already registered')) {
           toast.error("A user with this email already exists");
         } else {
-          console.error('Sign up error:', error);
-          toast.error("Failed to create user. Please try again.");
+          toast.error(`Failed to create user: ${signUpError.message}`);
         }
         return;
       }
 
       if (data?.user) {
+        console.log("User created successfully:", data.user);
         toast.success("Client has been added successfully. They will receive an email to set their password.");
         setEmail("");
         setFirstName("");
         setLastName("");
         setOpen(false);
+      } else {
+        console.error('No user data returned');
+        toast.error("Failed to create user. Please try again.");
       }
     } catch (error: any) {
       console.error('Error adding client:', error);
-      toast.error("Failed to add client. Please try again.");
+      toast.error(`Failed to add client: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -75,6 +95,9 @@ export function NewClientDialog() {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
+          <DialogDescription>
+            Create a new client account. They will receive an email to set their password.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
