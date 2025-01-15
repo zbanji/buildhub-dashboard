@@ -23,6 +23,7 @@ export function MessageList({ messages }: MessageListProps) {
     >
       {messages.map((message) => {
         const isAdmin = message.profiles?.role === 'admin';
+        const senderName = message.profiles?.name || 'Unknown User';
         
         return (
           <div
@@ -47,7 +48,7 @@ export function MessageList({ messages }: MessageListProps) {
                   isAdmin ? "text-gray-300" : "text-gray-600"
                 )}>
                   <span className="font-bold truncate max-w-[120px] sm:max-w-full">
-                    {message.profiles?.email}
+                    {senderName}
                   </span>
                   <span>•</span>
                   <span>
