@@ -27,13 +27,15 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       if (event === 'PASSWORD_RECOVERY') {
         setView("update_password");
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError?.message?.includes("over_email_send_rate_limit")) {
-          setError("Please wait 60 seconds before requesting another password reset.");
+        if (sessionError) {
+          handleAuthError(sessionError);
         }
       } else if (event === 'USER_UPDATED') {
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) {
           handleAuthError(sessionError);
+        } else if (currentSession) {
+          window.location.href = redirectTo;
         }
       } else if (event === 'SIGNED_IN') {
         if (session) {
@@ -41,6 +43,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         }
       } else if (event === 'SIGNED_OUT') {
         setError("");
+        setView("sign_in");
       }
     });
 
@@ -55,7 +58,9 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   const handleAuthError = (error: AuthError) => {
     let errorMessage = "An error occurred during authentication.";
     
-    if (error.message.includes("invalid_credentials") || error.message.includes("Invalid login credentials")) {
+    if (error.message.includes("invalid_credentials") || 
+        error.message.includes("Invalid login credentials") ||
+        error.message.includes("invalid_grant")) {
       errorMessage = "Invalid email or password. Please check your credentials and try again.";
     } else if (error.message.includes("Email not confirmed")) {
       errorMessage = "Please verify your email address before signing in.";
