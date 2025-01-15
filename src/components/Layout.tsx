@@ -33,7 +33,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     };
     getUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user || null);
       if (session?.user) {
         const { data: profile } = await supabase
@@ -52,9 +52,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const clearLocalState = () => {
+    setUser(null);
+    setUserRole(null);
+    setUserName(null);
+  };
+
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      // First clear local state
+      clearLocalState();
+      
+      // Attempt to sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+        // Even with error, we continue with local cleanup
+      }
+      
+      // Show success message
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully.",
+      });
+
+      // Navigate based on previous role
       if (userRole === 'admin') {
         navigate('/admin/login');
       } else {
@@ -62,13 +84,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Sign out error:', error);
-      // Even if sign out fails, we should clear local state and redirect
-      setUser(null);
-      setUserRole(null);
-      setUserName(null);
+      // Even if sign out fails completely, we still want to clear state and redirect
       toast({
-        title: "Sign out",
+        title: "Signed out",
         description: "You have been signed out successfully.",
+        variant: "default",
       });
       navigate('/client/login');
     }
