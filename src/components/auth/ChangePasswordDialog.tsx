@@ -34,14 +34,14 @@ export function ChangePasswordDialog({ onOpenChange }: ChangePasswordDialogProps
 
   const handleAuthError = (error: AuthError) => {
     console.error("Auth error:", error);
-    let errorMessage = "An error occurred during authentication.";
+    let errorMessage = "An error occurred while changing your password.";
     
     if (error.message.includes("invalid_credentials")) {
       errorMessage = "Current password is incorrect. Please check and try again.";
-    } else if (error.message.includes("same_password")) {
-      errorMessage = "New password must be different from your current password.";
     } else if (error.message.includes("Failed to fetch")) {
       errorMessage = "Network error. Please check your connection and try again.";
+    } else if (error.message.includes("same_password")) {
+      errorMessage = "New password must be different from your current password.";
     }
     
     toast({
@@ -77,8 +77,13 @@ export function ChangePasswordDialog({ onOpenChange }: ChangePasswordDialogProps
       }
 
       // First, verify current password
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) {
+        throw new Error("User email not found");
+      }
+
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: (await supabase.auth.getUser()).data.user?.email || '',
+        email: user.email,
         password: currentPassword,
       });
 

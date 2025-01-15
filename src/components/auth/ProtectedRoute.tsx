@@ -23,6 +23,11 @@ export function ProtectedRoute({ children, allowedRole }: ProtectedRouteProps) {
         
         if (userError) {
           console.error("Auth error:", userError);
+          toast({
+            title: "Authentication Error",
+            description: "Please sign in again to continue.",
+            variant: "destructive",
+          });
           setLoading(false);
           return;
         }
@@ -52,6 +57,11 @@ export function ProtectedRoute({ children, allowedRole }: ProtectedRouteProps) {
         setLoading(false);
       } catch (error) {
         console.error("Protected route error:", error);
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
         setLoading(false);
       }
     };
@@ -99,7 +109,7 @@ export function ProtectedRoute({ children, allowedRole }: ProtectedRouteProps) {
   }
 
   if (!user) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+    return <Navigate to="/client/login" state={{ from: location }} replace />;
   }
 
   if (userRole !== allowedRole) {
