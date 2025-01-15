@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ChangePasswordDialog } from "./auth/ChangePasswordDialog";
 
 interface UserMenuProps {
   user: User | null;
@@ -36,6 +37,7 @@ export function UserMenu({ user, userName, onSignOut }: UserMenuProps) {
           <Settings className="mr-2 h-4 w-4" />
           Settings
         </DropdownMenuItem>
+        <ChangePasswordDialog />
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
