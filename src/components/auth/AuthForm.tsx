@@ -53,6 +53,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       } else if (event === 'SIGNED_IN') {
         if (session) {
           try {
+            console.log("Fetching user profile for ID:", session.user.id);
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('role')
@@ -64,6 +65,12 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
               throw profileError;
             }
 
+            if (!profile) {
+              console.error("No profile found for user");
+              throw new Error("User profile not found");
+            }
+
+            console.log("Profile fetched successfully:", profile);
             window.location.href = redirectTo;
           } catch (err) {
             console.error("Error during sign in:", err);
