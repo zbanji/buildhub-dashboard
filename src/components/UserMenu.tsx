@@ -1,6 +1,6 @@
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { User as UserIcon, LogOut } from "lucide-react";
+import { User as UserIcon, LogOut, Lock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +33,12 @@ export function UserMenu({ user, userName, onSignOut }: UserMenuProps) {
           <UserIcon className="mr-2 h-4 w-4" />
           Profile
         </DropdownMenuItem>
-        <ChangePasswordDialog />
+        <ChangePasswordDialog trigger={
+          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+            <Lock className="mr-2 h-4 w-4" />
+            Change Password
+          </DropdownMenuItem>
+        } />
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onSignOut}>
           <LogOut className="mr-2 h-4 w-4" />

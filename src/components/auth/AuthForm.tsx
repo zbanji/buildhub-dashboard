@@ -82,6 +82,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
             }
 
             console.log("Profile fetched/created successfully:", profile);
+            // Redirect based on user role
             if (profile?.role === 'admin') {
               navigate('/admin/projects');
             } else {
@@ -111,13 +112,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   }, [searchParams, setError, navigate]);
 
   const handleAuthError = (error: AuthError) => {
-    console.error("Auth error details:", {
-      message: error.message,
-      status: error.status,
-      name: error.name,
-      code: error instanceof Error ? error.message : 'Unknown error'
-    });
-    
+    console.error("Auth error:", error);
     let errorMessage = "An error occurred during authentication.";
     
     if (error.message.includes("invalid_credentials") || 
@@ -129,11 +124,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     } else if (error.message.includes("User not found")) {
       errorMessage = "No account found with these credentials.";
     } else if (error.message.includes("Failed to fetch")) {
-      errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
-    } else if (error.message.includes("rate limit")) {
-      errorMessage = "Too many login attempts. Please wait a moment before trying again.";
-    } else if (error.message.includes("password")) {
-      errorMessage = "Invalid password format. Please check your password and try again.";
+      errorMessage = "Network error. Please check your connection and try again.";
     }
     
     setError(errorMessage);
