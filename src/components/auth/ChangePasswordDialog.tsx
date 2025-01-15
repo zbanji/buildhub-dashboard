@@ -32,10 +32,35 @@ export function ChangePasswordDialog() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const form = useForm<ChangePasswordForm>();
+  const form = useForm<ChangePasswordForm>({
+    defaultValues: {
+      currentPassword: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const validatePassword = (password: string) => {
+    if (password.length < 6) {
+      return "Password must be at least 6 characters long";
+    }
+    return true;
+  };
 
   const onSubmit = async (data: ChangePasswordForm) => {
     try {
+      // Validate password length
+      const passwordValidation = validatePassword(data.password);
+      if (passwordValidation !== true) {
+        toast({
+          title: "Error",
+          description: passwordValidation,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate password match
       if (data.password !== data.confirmPassword) {
         toast({
           title: "Error",
@@ -116,7 +141,7 @@ export function ChangePasswordDialog() {
         <DialogHeader>
           <DialogTitle>Change Password</DialogTitle>
           <DialogDescription>
-            Enter your current password and choose a new password.
+            Enter your current password and choose a new password. Password must be at least 6 characters long.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
