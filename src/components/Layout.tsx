@@ -60,8 +60,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white">
-      <header className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-50 shadow-sm">
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {isMobile ? (
@@ -78,18 +78,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </SheetContent>
               </Sheet>
             ) : null}
-            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-              BuildHub
-            </h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-primary">BuildHub</h1>
             <div className="flex items-center gap-4">
               {user && <UserMenu user={user} userName={userName} onSignOut={handleSignOut} />}
             </div>
           </div>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 fade-in">
-        {children}
-      </main>
+      <main className="max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8">{children}</main>
     </div>
   );
 }
