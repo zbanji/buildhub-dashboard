@@ -23,23 +23,53 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   const resetPasswordRedirectTo = `${baseUrl}/client/login?type=recovery`;
 
   useEffect(() => {
+    console.log("Setting up auth state change listener");
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session);
+      
       if (event === 'PASSWORD_RECOVERY') {
         setView("update_password");
-        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) {
-          handleAuthError(sessionError);
+        try {
+          const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) {
+            handleAuthError(sessionError);
+          }
+        } catch (err) {
+          console.error("Error getting session:", err);
+          setError("Failed to recover password. Please try again.");
         }
       } else if (event === 'USER_UPDATED') {
-        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) {
-          handleAuthError(sessionError);
-        } else if (currentSession) {
-          window.location.href = redirectTo;
+        try {
+          const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) {
+            handleAuthError(sessionError);
+          } else if (currentSession) {
+            window.location.href = redirectTo;
+          }
+        } catch (err) {
+          console.error("Error getting session after update:", err);
+          setError("Failed to update user. Please try again.");
         }
       } else if (event === 'SIGNED_IN') {
         if (session) {
-          window.location.href = redirectTo;
+          try {
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .maybeSingle();
+
+            if (profileError) {
+              console.error("Error fetching profile:", profileError);
+              throw profileError;
+            }
+
+            window.location.href = redirectTo;
+          } catch (err) {
+            console.error("Error during sign in:", err);
+            setError("Failed to complete sign in. Please try again.");
+            await supabase.auth.signOut();
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         setError("");
@@ -52,10 +82,14 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       setView("update_password");
     }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("Cleaning up auth state change listener");
+      subscription.unsubscribe();
+    };
   }, [searchParams, setError, redirectTo]);
 
   const handleAuthError = (error: AuthError) => {
+    console.error("Auth error:", error);
     let errorMessage = "An error occurred during authentication.";
     
     if (error.message.includes("invalid_credentials") || 
@@ -68,6 +102,8 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       errorMessage = "No account found with these credentials.";
     } else if (error.message.includes("over_email_send_rate_limit")) {
       errorMessage = "Please wait before requesting another password reset.";
+    } else if (error.message.includes("Failed to fetch")) {
+      errorMessage = "Network error. Please check your connection and try again.";
     }
     
     setError(errorMessage);
