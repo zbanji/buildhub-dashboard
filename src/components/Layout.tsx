@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { UserMenu } from "./UserMenu";
 import { useToast } from "@/hooks/use-toast";
+import { cleanupSession } from "@/utils/auth-cleanup";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -18,38 +19,70 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, name')
-          .eq('id', user.id)
-          .maybeSingle();
-        setUserRole(profile?.role || null);
-        setUserName(profile?.name || null);
+    const initializeAuth = async () => {
+      try {
+        // Get the current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        // Update user state based on session
+        const currentUser = session?.user || null;
+        setUser(currentUser);
+
+        if (currentUser) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role, name')
+            .eq('id', currentUser.id)
+            .maybeSingle();
+
+          if (profileError) throw profileError;
+          
+          setUserRole(profile?.role || null);
+          setUserName(profile?.name || null);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        // Clear local state on error
+        clearLocalState();
       }
     };
-    getUser();
 
+    // Initialize auth state
+    initializeAuth();
+
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user || null);
+      console.log("Auth state changed:", event, session);
+      
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        clearLocalState();
+        return;
+      }
+
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, name')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        setUserRole(profile?.role || null);
-        setUserName(profile?.name || null);
-      } else {
-        setUserRole(null);
-        setUserName(null);
+        setUser(session.user);
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role, name')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (profileError) throw profileError;
+          
+          setUserRole(profile?.role || null);
+          setUserName(profile?.name || null);
+        } catch (error) {
+          console.error('Profile fetch error:', error);
+          clearLocalState();
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const clearLocalState = () => {
@@ -60,14 +93,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     try {
-      // First clear local state
+      // First clear local state and session data
       clearLocalState();
+      await cleanupSession();
       
-      // Attempt to sign out from Supabase
+      // Then attempt to sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out error:', error);
-        // Even with error, we continue with local cleanup
       }
       
       // Show success message
@@ -84,12 +117,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Sign out error:', error);
-      // Even if sign out fails completely, we still want to clear state and redirect
-      toast({
-        title: "Signed out",
-        description: "You have been signed out successfully.",
-        variant: "default",
-      });
+      // Even if sign out fails, we still want to clear state and redirect
       navigate('/client/login');
     }
   };
