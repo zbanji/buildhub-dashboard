@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AuthContainer } from "./AuthContainer";
 import { AuthMessage } from "./AuthMessage";
 import { useAuthMessages } from "@/hooks/auth/use-auth-messages";
+import { AuthError } from "@supabase/supabase-js";
 
 interface AuthFormProps {
   title: string;
@@ -22,23 +23,44 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
   const resetPasswordRedirectTo = `${baseUrl}/client/login?type=recovery`;
 
   useEffect(() => {
-    const type = searchParams.get("type");
-    if (type === "recovery") {
-      setView("update_password");
-    }
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
+      if (event === 'PASSWORD_RECOVERY') {
         setView("update_password");
         const lastError = (supabase.auth.getSession() as any)?.error;
         if (lastError?.message?.includes("over_email_send_rate_limit")) {
           setError("Please wait 60 seconds before requesting another password reset.");
         }
+      } else if (event === 'USER_UPDATED') {
+        const { error } = supabase.auth.getSession();
+        if (error) {
+          handleAuthError(error);
+        }
       }
     });
 
+    const type = searchParams.get("type");
+    if (type === "recovery") {
+      setView("update_password");
+    }
+
     return () => subscription.unsubscribe();
   }, [searchParams, setError]);
+
+  const handleAuthError = (error: AuthError) => {
+    let errorMessage = "An error occurred during authentication.";
+    
+    if (error.message.includes("invalid_credentials")) {
+      errorMessage = "Invalid email or password. Please check your credentials and try again.";
+    } else if (error.message.includes("Email not confirmed")) {
+      errorMessage = "Please verify your email address before signing in.";
+    } else if (error.message.includes("User not found")) {
+      errorMessage = "No account found with these credentials.";
+    } else if (error.message.includes("over_email_send_rate_limit")) {
+      errorMessage = "Please wait before requesting another password reset.";
+    }
+    
+    setError(errorMessage);
+  };
 
   return (
     <AuthContainer title={view === "update_password" ? "Reset Password" : title}>
