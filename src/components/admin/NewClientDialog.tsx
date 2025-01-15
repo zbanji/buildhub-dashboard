@@ -26,15 +26,15 @@ export function NewClientDialog() {
     setLoading(true);
 
     try {
+      const fullName = `${firstName} ${lastName}`.trim();
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password: 'Buildhub123', // Fixed default password
         options: {
           data: {
-            first_name: firstName,
-            last_name: lastName,
             role: 'client',
-            name: `${firstName} ${lastName}`.trim()
+            name: fullName,
           }
         }
       });
@@ -44,11 +44,13 @@ export function NewClientDialog() {
         throw error;
       }
 
-      toast.success("Client has been added successfully");
-      setEmail("");
-      setFirstName("");
-      setLastName("");
-      setOpen(false);
+      if (data?.user) {
+        toast.success("Client has been added successfully");
+        setEmail("");
+        setFirstName("");
+        setLastName("");
+        setOpen(false);
+      }
     } catch (error: any) {
       console.error("Error details:", error);
       toast.error(error.message || "Failed to add client. Please try again.");
