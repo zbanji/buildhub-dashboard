@@ -1,6 +1,6 @@
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { User as UserIcon, Settings, LogOut } from "lucide-react";
+import { User as UserIcon, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,10 +32,6 @@ export function UserMenu({ user, userName, onSignOut }: UserMenuProps) {
         <DropdownMenuItem>
           <UserIcon className="mr-2 h-4 w-4" />
           Profile
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
         </DropdownMenuItem>
         <ChangePasswordDialog />
         <DropdownMenuSeparator />

@@ -1,11 +1,12 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AuthContainer } from "./AuthContainer";
 import { AuthMessage } from "./AuthMessage";
 import { useAuthMessages } from "@/hooks/auth/use-auth-messages";
+import { AuthError } from "@supabase/supabase-js";
 
 interface AuthFormProps {
   title: string;
@@ -14,31 +15,129 @@ interface AuthFormProps {
 
 export function AuthForm({ title, error: propError }: AuthFormProps) {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
   const { message, error, setError } = useAuthMessages(propError);
   
   const baseUrl = window.location.origin;
-  const redirectTo = `${baseUrl}/client`;
   const resetPasswordRedirectTo = `${baseUrl}/client/login?type=recovery`;
 
   useEffect(() => {
+    console.log("Setting up auth state change listener");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session);
+      
+      if (event === 'PASSWORD_RECOVERY') {
+        setView("update_password");
+        try {
+          const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) {
+            handleAuthError(sessionError);
+          }
+        } catch (err) {
+          console.error("Error getting session:", err);
+          setError("Failed to recover password. Please try again.");
+        }
+      } else if (event === 'USER_UPDATED') {
+        try {
+          const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) {
+            handleAuthError(sessionError);
+          } else if (currentSession) {
+            navigate('/');
+          }
+        } catch (err) {
+          console.error("Error getting session after update:", err);
+          setError("Failed to update user. Please try again.");
+        }
+      } else if (event === 'SIGNED_IN') {
+        if (session) {
+          try {
+            console.log("Fetching user profile for ID:", session.user.id);
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .maybeSingle();
+
+            if (profileError) {
+              console.error("Error fetching profile:", profileError);
+              throw profileError;
+            }
+
+            if (!profile) {
+              console.log("No profile found, creating new profile");
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert([{ 
+                  id: session.user.id, 
+                  role: 'client',
+                  email: session.user.email 
+                }]);
+              
+              if (insertError) {
+                console.error("Error creating profile:", insertError);
+                throw insertError;
+              }
+            }
+
+            console.log("Profile fetched/created successfully:", profile);
+            if (profile?.role === 'admin') {
+              navigate('/admin/projects');
+            } else {
+              navigate('/');
+            }
+          } catch (err) {
+            console.error("Error during sign in:", err);
+            setError("Failed to complete sign in. Please try again.");
+            await supabase.auth.signOut();
+          }
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setError("");
+        setView("sign_in");
+      }
+    });
+
     const type = searchParams.get("type");
     if (type === "recovery") {
       setView("update_password");
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setView("update_password");
-        const lastError = (supabase.auth.getSession() as any)?.error;
-        if (lastError?.message?.includes("over_email_send_rate_limit")) {
-          setError("Please wait 60 seconds before requesting another password reset.");
-        }
-      }
-    });
+    return () => {
+      console.log("Cleaning up auth state change listener");
+      subscription.unsubscribe();
+    };
+  }, [searchParams, setError, navigate]);
 
-    return () => subscription.unsubscribe();
-  }, [searchParams, setError]);
+  const handleAuthError = (error: AuthError) => {
+    console.error("Auth error details:", {
+      message: error.message,
+      status: error.status,
+      name: error.name,
+      code: error instanceof Error ? error.message : 'Unknown error'
+    });
+    
+    let errorMessage = "An error occurred during authentication.";
+    
+    if (error.message.includes("invalid_credentials") || 
+        error.message.includes("Invalid login credentials") ||
+        error.message.includes("invalid_grant")) {
+      errorMessage = "Invalid email or password. Please check your credentials and try again.";
+    } else if (error.message.includes("Email not confirmed")) {
+      errorMessage = "Please verify your email address before signing in.";
+    } else if (error.message.includes("User not found")) {
+      errorMessage = "No account found with these credentials.";
+    } else if (error.message.includes("Failed to fetch")) {
+      errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
+    } else if (error.message.includes("rate limit")) {
+      errorMessage = "Too many login attempts. Please wait a moment before trying again.";
+    } else if (error.message.includes("password")) {
+      errorMessage = "Invalid password format. Please check your password and try again.";
+    }
+    
+    setError(errorMessage);
+  };
 
   return (
     <AuthContainer title={view === "update_password" ? "Reset Password" : title}>
@@ -59,7 +158,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
           }
         }}
         providers={[]}
-        redirectTo={redirectTo}
+        redirectTo={baseUrl}
         showLinks={false}
         localization={{
           variables: {
