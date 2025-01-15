@@ -115,7 +115,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     console.error("Auth error:", error);
     let errorMessage = "An error occurred during authentication.";
     
-    // Enhanced error messages for common scenarios
     if (error.message.includes("invalid_credentials") || 
         error.message.includes("Invalid login credentials") ||
         error.message.includes("invalid_grant")) {
