@@ -1,7 +1,7 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AuthContainer } from "./AuthContainer";
 import { AuthMessage } from "./AuthMessage";
@@ -15,11 +15,11 @@ interface AuthFormProps {
 
 export function AuthForm({ title, error: propError }: AuthFormProps) {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
   const { message, error, setError } = useAuthMessages(propError);
   
   const baseUrl = window.location.origin;
-  const redirectTo = `${baseUrl}/client`;
   const resetPasswordRedirectTo = `${baseUrl}/client/login?type=recovery`;
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
           if (sessionError) {
             handleAuthError(sessionError);
           } else if (currentSession) {
-            window.location.href = redirectTo;
+            navigate('/');
           }
         } catch (err) {
           console.error("Error getting session after update:", err);
@@ -82,7 +82,12 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
             }
 
             console.log("Profile fetched/created successfully:", profile);
-            window.location.href = redirectTo;
+            // Redirect based on user role
+            if (profile?.role === 'admin') {
+              navigate('/admin/projects');
+            } else {
+              navigate('/');
+            }
           } catch (err) {
             console.error("Error during sign in:", err);
             setError("Failed to complete sign in. Please try again.");
@@ -104,7 +109,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       console.log("Cleaning up auth state change listener");
       subscription.unsubscribe();
     };
-  }, [searchParams, setError, redirectTo]);
+  }, [searchParams, setError, navigate]);
 
   const handleAuthError = (error: AuthError) => {
     console.error("Auth error:", error);
@@ -144,7 +149,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
           }
         }}
         providers={[]}
-        redirectTo={redirectTo}
+        redirectTo={baseUrl}
         showLinks={false}
         localization={{
           variables: {
