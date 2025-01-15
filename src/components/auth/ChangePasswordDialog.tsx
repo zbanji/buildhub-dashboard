@@ -42,6 +42,15 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
         return;
       }
 
+      if (currentPassword === newPassword) {
+        toast({
+          title: "Error",
+          description: "New password must be different from your current password",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // First verify the current password
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: (await supabase.auth.getUser()).data.user?.email || '',
@@ -62,7 +71,18 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
         password: newPassword
       });
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        if (updateError.message.includes("same_password")) {
+          toast({
+            title: "Error",
+            description: "New password must be different from your current password",
+            variant: "destructive",
+          });
+        } else {
+          throw updateError;
+        }
+        return;
+      }
 
       toast({
         title: "Success",
@@ -93,7 +113,7 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
         <DialogHeader>
           <DialogTitle>Change Password</DialogTitle>
           <DialogDescription>
-            Enter your current password and new password below. Password must be at least 6 characters long.
+            Enter your current password and new password below. Password must be at least 6 characters long and different from your current password.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
