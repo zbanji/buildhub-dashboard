@@ -69,7 +69,11 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
               console.log("No profile found, creating new profile");
               const { error: insertError } = await supabase
                 .from('profiles')
-                .insert([{ id: session.user.id, role: 'client' }]);
+                .insert([{ 
+                  id: session.user.id, 
+                  role: 'client',
+                  email: session.user.email 
+                }]);
               
               if (insertError) {
                 console.error("Error creating profile:", insertError);
