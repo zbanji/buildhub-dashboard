@@ -115,6 +115,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     console.error("Auth error:", error);
     let errorMessage = "An error occurred during authentication.";
     
+    // Enhanced error messages for common scenarios
     if (error.message.includes("invalid_credentials") || 
         error.message.includes("Invalid login credentials") ||
         error.message.includes("invalid_grant")) {
@@ -124,7 +125,11 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     } else if (error.message.includes("User not found")) {
       errorMessage = "No account found with these credentials.";
     } else if (error.message.includes("Failed to fetch")) {
-      errorMessage = "Network error. Please check your connection and try again.";
+      errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
+    } else if (error.message.includes("rate limit")) {
+      errorMessage = "Too many login attempts. Please wait a moment before trying again.";
+    } else if (error.message.includes("password")) {
+      errorMessage = "Invalid password format. Please check your password and try again.";
     }
     
     setError(errorMessage);
