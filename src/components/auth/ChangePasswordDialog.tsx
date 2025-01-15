@@ -1,20 +1,22 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-interface ChangePasswordDialogProps {
-  trigger: React.ReactNode;
-}
-
-export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
+export function ChangePasswordDialog() {
+  const [isOpen, setIsOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -23,20 +25,20 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
     setIsLoading(true);
 
     try {
-      // Validation checks
-      if (newPassword !== confirmPassword) {
+      // Basic validation
+      if (newPassword.length < 6) {
         toast({
           title: "Error",
-          description: "New passwords do not match",
+          description: "New password must be at least 6 characters long",
           variant: "destructive",
         });
         return;
       }
 
-      if (newPassword.length < 6) {
+      if (newPassword !== confirmPassword) {
         toast({
           title: "Error",
-          description: "Password should be at least 6 characters",
+          description: "New passwords do not match",
           variant: "destructive",
         });
         return;
@@ -51,22 +53,12 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
         return;
       }
 
-      // First verify the current password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: (await supabase.auth.getUser()).data.user?.email || '',
-        password: currentPassword,
-      });
-
-      if (signInError) {
-        toast({
-          title: "Error",
-          description: "Current password is incorrect",
-          variant: "destructive",
-        });
-        return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) {
+        throw new Error("User email not found");
       }
 
-      // If current password is correct, proceed with password update
+      // Update the password directly without re-authentication
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -86,17 +78,19 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
 
       toast({
         title: "Success",
-        description: "Password updated successfully",
+        description: "Your password has been updated successfully",
       });
-      
-      setIsOpen(false);
+
+      // Reset form and close dialog
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (error: any) {
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Password change error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update password",
+        description: "Failed to change password. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -107,7 +101,7 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        {trigger}
+        <Button variant="outline">Change Password</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -118,37 +112,47 @@ export function ChangePasswordDialog({ trigger }: ChangePasswordDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="current-password">Current Password</Label>
+            <label htmlFor="currentPassword" className="text-sm font-medium">
+              Current Password
+            </label>
             <Input
+              id="currentPassword"
               type="password"
-              id="current-password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="new-password">New Password</Label>
+            <label htmlFor="newPassword" className="text-sm font-medium">
+              New Password
+            </label>
             <Input
+              id="newPassword"
               type="password"
-              id="new-password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm New Password</Label>
+            <label htmlFor="confirmPassword" className="text-sm font-medium">
+              Confirm New Password
+            </label>
             <Input
+              id="confirmPassword"
               type="password"
-              id="confirm-password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
           </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
