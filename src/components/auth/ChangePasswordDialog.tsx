@@ -41,7 +41,7 @@ export function ChangePasswordDialog() {
   });
 
   const validatePassword = (password: string) => {
-    if (password.length < 6) {
+    if (!password || password.length < 6) {
       return "Password must be at least 6 characters long";
     }
     return true;
@@ -49,7 +49,7 @@ export function ChangePasswordDialog() {
 
   const onSubmit = async (data: ChangePasswordForm) => {
     try {
-      // Validate password length
+      // Validate password length before making any API calls
       const passwordValidation = validatePassword(data.password);
       if (passwordValidation !== true) {
         toast({
