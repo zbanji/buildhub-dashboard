@@ -24,6 +24,13 @@ export function ChangePasswordDialog({ onOpenChange }: ChangePasswordDialogProps
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  const resetForm = () => {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setIsLoading(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -36,6 +43,7 @@ export function ChangePasswordDialog({ onOpenChange }: ChangePasswordDialogProps
           description: "New password must be at least 6 characters long",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
@@ -45,6 +53,23 @@ export function ChangePasswordDialog({ onOpenChange }: ChangePasswordDialogProps
           description: "New passwords do not match",
           variant: "destructive",
         });
+        setIsLoading(false);
+        return;
+      }
+
+      // First, verify current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: (await supabase.auth.getUser()).data.user?.email || '',
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        toast({
+          title: "Error",
+          description: "Current password is incorrect",
+          variant: "destructive",
+        });
+        setIsLoading(false);
         return;
       }
 
@@ -61,35 +86,41 @@ export function ChangePasswordDialog({ onOpenChange }: ChangePasswordDialogProps
             variant: "destructive",
           });
         } else {
-          throw error;
+          toast({
+            title: "Error",
+            description: "Failed to update password. Please try again.",
+            variant: "destructive",
+          });
         }
+        setIsLoading(false);
         return;
       }
 
+      // Success case
       toast({
         title: "Success",
         description: "Your password has been updated successfully",
       });
 
       // Reset form and close dialog
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      resetForm();
       setIsOpen(false);
       if (onOpenChange) onOpenChange(false);
     } catch (error) {
       console.error("Password change error:", error);
       toast({
         title: "Error",
-        description: "Failed to change password. Please try again.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
 
   const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      resetForm();
+    }
     setIsOpen(open);
     if (onOpenChange) onOpenChange(open);
   };
@@ -109,7 +140,7 @@ export function ChangePasswordDialog({ onOpenChange }: ChangePasswordDialogProps
         <DialogHeader>
           <DialogTitle>Change Password</DialogTitle>
           <DialogDescription>
-            Enter your new password below. Password must be at least 6 characters long and different from your current password.
+            Enter your current password and new password below. Password must be at least 6 characters long and different from your current password.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -154,6 +185,7 @@ export function ChangePasswordDialog({ onOpenChange }: ChangePasswordDialogProps
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
+              disabled={isLoading}
             >
               Cancel
             </Button>
