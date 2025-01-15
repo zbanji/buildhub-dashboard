@@ -80,6 +80,11 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       } else if (event === 'SIGNED_OUT') {
         setError("");
         setView("sign_in");
+      } else if (event === 'SIGN_IN_WITH_PASSWORD') {
+        // Handle password sign-in errors
+        if (!session) {
+          setError("Invalid email or password. Please check your credentials and try again.");
+        }
       }
     });
 
