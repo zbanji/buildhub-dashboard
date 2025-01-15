@@ -26,23 +26,19 @@ export function NewClientDialog() {
     setLoading(true);
 
     try {
-      const fullName = `${firstName} ${lastName}`.trim();
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password: 'Buildhub123', // Fixed default password
         options: {
           data: {
             role: 'client',
-            name: fullName,
+            name: `${firstName} ${lastName}`.trim(),
+            email: email
           }
         }
       });
 
-      if (error) {
-        console.error("Signup error:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (data?.user) {
         toast.success("Client has been added successfully");
