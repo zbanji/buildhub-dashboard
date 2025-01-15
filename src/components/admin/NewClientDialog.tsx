@@ -18,13 +18,27 @@ export function NewClientDialog() {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [open, setOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // First check if user already exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (existingUser) {
+        toast.error("A user with this email already exists");
+        return;
+      }
+
+      // Create new user
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password: 'Buildhub123', // Fixed default password
         options: {
@@ -36,21 +50,29 @@ export function NewClientDialog() {
         }
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
 
-      toast.success("Client has been added successfully");
-      setEmail("");
-      setFirstName("");
-      setLastName("");
-    } catch (error) {
-      toast.error("Failed to add client. Please try again.");
+      if (data?.user) {
+        toast.success("Client has been added successfully. They will receive an email to set their password.");
+        setEmail("");
+        setFirstName("");
+        setLastName("");
+        setOpen(false);
+      }
+    } catch (error: any) {
+      console.error('Error adding client:', error);
+      if (error.message.includes('User already registered')) {
+        toast.error("A user with this email already exists");
+      } else {
+        toast.error(error.message || "Failed to add client. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <UserPlus className="mr-2 h-4 w-4" />
