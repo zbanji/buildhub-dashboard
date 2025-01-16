@@ -31,8 +31,8 @@ export function NewClientDialog() {
       // Generate a random password
       const tempPassword = Math.random().toString(36).slice(-8);
       
-      // Create the user with minimal metadata first
-      const { data, error } = await supabase.auth.signUp({
+      // First create the user with minimal data
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password: tempPassword,
         options: {
@@ -42,35 +42,38 @@ export function NewClientDialog() {
         }
       });
 
-      if (error) {
-        console.error("Signup error:", error);
-        throw error;
+      if (signUpError) {
+        console.error("Signup error:", signUpError);
+        throw signUpError;
       }
 
-      // If signup successful, update the profile
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ 
-            name: `${firstName} ${lastName}`.trim(),
-            email: email
-          })
-          .eq('id', data.user.id);
-
-        if (profileError) {
-          console.error("Profile update error:", profileError);
-          throw profileError;
-        }
+      if (!signUpData.user) {
+        throw new Error("No user data returned from signup");
       }
 
-      console.log("Signup successful:", data);
+      // Then update the profile with additional information
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          name: `${firstName} ${lastName}`.trim(),
+          email: email,
+          role: 'client'
+        })
+        .eq('id', signUpData.user.id);
+
+      if (profileError) {
+        console.error("Profile update error:", profileError);
+        throw profileError;
+      }
+
+      console.log("Client creation successful");
       toast.success("Client has been added successfully");
       setEmail("");
       setFirstName("");
       setLastName("");
       setOpen(false);
     } catch (error) {
-      console.error("Error details:", error);
+      console.error("Error creating client:", error);
       toast.error("Failed to add client. Please try again.");
     } finally {
       setLoading(false);
