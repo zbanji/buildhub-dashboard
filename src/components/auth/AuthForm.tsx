@@ -75,13 +75,18 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
           } catch (err) {
             console.error("Error during sign in:", err);
             setError("Failed to complete sign in. Please try again.");
-            await supabase.auth.signOut();
+            await cleanupSession();
           }
         }
       } else if (event === 'SIGNED_OUT') {
-        await cleanupSession();
-        setError("");
-        setView("sign_in");
+        try {
+          await cleanupSession();
+        } catch (err) {
+          console.error("Error during cleanup:", err);
+        } finally {
+          setError("");
+          setView("sign_in");
+        }
       }
     });
 
