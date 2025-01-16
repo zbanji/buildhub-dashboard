@@ -3,8 +3,6 @@ import { Layout } from "@/components/Layout";
 import { ProjectList } from "@/components/admin/projects/ProjectList";
 import { ProjectHeader } from "@/components/admin/projects/ProjectHeader";
 import { useProjects, useProjectMessages, useProjectMilestones } from "@/hooks/use-project-data";
-import { EditProjectDialog } from "@/components/admin/EditProjectDialog";
-import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
 import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
 import { UploadMediaButton } from "@/components/admin/projects/UploadMediaButton";
 import { ClientManagement } from "@/components/admin/clients/ClientManagement";
@@ -17,6 +15,8 @@ export default function AdminProjects() {
   const { data: projects, refetch: refetchProjects } = useProjects();
   const { data: messages, refetch: refetchMessages } = useProjectMessages(selectedProject);
   const { data: milestones, refetch: refetchMilestones } = useProjectMilestones(selectedProject);
+
+  const selectedProjectData = projects?.find(p => p.id === selectedProject);
 
   return (
     <Layout>
@@ -34,7 +34,12 @@ export default function AdminProjects() {
           </TabsList>
 
           <TabsContent value="projects">
-            <ProjectHeader />
+            {selectedProjectData && (
+              <ProjectHeader 
+                project={selectedProjectData} 
+                onProjectUpdated={refetchProjects}
+              />
+            )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
               <div className="md:col-span-2">
                 <ProjectList
@@ -50,18 +55,6 @@ export default function AdminProjects() {
                     <div className="flex flex-col gap-4 p-4 border rounded-lg bg-card">
                       <h3 className="text-lg font-semibold">Project Actions</h3>
                       <div className="flex flex-col gap-2">
-                        <div className="space-y-2">
-                          <EditProjectDialog 
-                            projectId={selectedProject} 
-                            onUpdate={refetchProjects}
-                          />
-                          <ProjectUpdateDialog
-                            projectId={selectedProject}
-                            milestones={milestones || []}
-                            onUpdate={refetchProjects}
-                          />
-                        </div>
-                        <Separator className="my-2" />
                         <div className="space-y-2">
                           <UploadMediaButton
                             projectId={selectedProject}
