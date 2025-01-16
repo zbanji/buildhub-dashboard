@@ -44,7 +44,8 @@ export function NewProjectDialog() {
     }
 
     try {
-      const { error } = await supabase
+      // Create project first
+      const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .insert({
           name: projectName,
@@ -53,9 +54,29 @@ export function NewProjectDialog() {
           planned_completion: plannedCompletion,
           description,
           client_id: selectedClient,
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (projectError) throw projectError;
+
+      // Insert milestones with the new project ID
+      const milestonesWithValidData = milestones.filter(m => m.name.trim() !== '');
+      
+      if (milestonesWithValidData.length > 0) {
+        const { error: milestoneError } = await supabase
+          .from('project_milestones')
+          .insert(
+            milestonesWithValidData.map(milestone => ({
+              project_id: projectData.id,
+              name: milestone.name,
+              description: milestone.description,
+              planned_completion: milestone.plannedCompletion,
+            }))
+          );
+
+        if (milestoneError) throw milestoneError;
+      }
 
       toast({
         title: "Success",
