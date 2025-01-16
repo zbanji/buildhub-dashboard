@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 interface Client {
   id: string;
   email: string;
+  name: string | null;
 }
 
 interface ClientSelectProps {
@@ -26,12 +27,12 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
     try {
       setLoading(true);
       
-      // Get all users with 'client' role from profiles
       const { data: clientProfiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           id,
-          email
+          email,
+          name
         `)
         .eq('role', 'client');
 
@@ -44,10 +45,10 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
         return;
       }
 
-      // Map the profiles to our Client interface
       const clientList = clientProfiles.map(profile => ({
         id: profile.id,
-        email: profile.email || 'No email'
+        email: profile.email || 'No email',
+        name: profile.name
       }));
 
       setClients(clientList);
@@ -63,6 +64,10 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
     }
   };
 
+  const getDisplayName = (client: Client) => {
+    return client.name || client.email || 'Unnamed Client';
+  };
+
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Client</label>
@@ -73,7 +78,7 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
         <SelectContent>
           {clients.map((client) => (
             <SelectItem key={client.id} value={client.id}>
-              {client.email}
+              {getDisplayName(client)}
             </SelectItem>
           ))}
         </SelectContent>
