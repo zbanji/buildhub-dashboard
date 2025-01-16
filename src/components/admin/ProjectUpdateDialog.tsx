@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 
+type ProjectStatus = "planning" | "in_progress" | "review" | "completed";
+
 export interface ProjectUpdateDialogProps {
   projectId: string;
   milestones?: Milestone[];
@@ -18,7 +20,7 @@ export interface ProjectUpdateDialogProps {
 export function ProjectUpdateDialog({ projectId, milestones = [], onUpdate }: ProjectUpdateDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const [status, setStatus] = useState<string>("");
+  const [status, setStatus] = useState<ProjectStatus>("planning");
   const [selectedMilestone, setSelectedMilestone] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
 
@@ -76,7 +78,7 @@ export function ProjectUpdateDialog({ projectId, milestones = [], onUpdate }: Pr
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Project Status</Label>
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={status} onValueChange={(value: ProjectStatus) => setStatus(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
