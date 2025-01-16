@@ -1,11 +1,40 @@
-import { NewProjectDialog } from "@/components/admin/NewProjectDialog";
+import { Button } from "@/components/ui/button";
+import { Project } from "@/types/project";
+import { useState } from "react";
+import { EditProjectDialog } from "../EditProjectDialog";
+import { ProjectUpdateDialog } from "../ProjectUpdateDialog";
 
-export function ProjectHeader() {
+interface ProjectHeaderProps {
+  project: Project;
+  onProjectUpdated: () => void;
+}
+
+export function ProjectHeader({ project, onProjectUpdated }: ProjectHeaderProps) {
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-      <h1 className="text-3xl font-bold">Project Management</h1>
-      <div className="flex flex-wrap items-center gap-4">
-        <NewProjectDialog />
+    <div className="flex items-center justify-between mb-6">
+      <h1 className="text-2xl font-semibold">{project.name}</h1>
+      <div className="flex items-center gap-3">
+        <Button onClick={() => setShowEditDialog(true)} variant="outline">
+          Edit Project
+        </Button>
+        <Button onClick={() => setShowUpdateDialog(true)} variant="outline">
+          Update Status
+        </Button>
+        <EditProjectDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          project={project}
+          onProjectUpdated={onProjectUpdated}
+        />
+        <ProjectUpdateDialog
+          open={showUpdateDialog}
+          onOpenChange={setShowUpdateDialog}
+          project={project}
+          onProjectUpdated={onProjectUpdated}
+        />
       </div>
     </div>
   );

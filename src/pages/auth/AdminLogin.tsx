@@ -16,5 +16,5 @@ export default function AdminLogin() {
     );
   }
 
-  return <AuthForm title="Admin Login" error={error} />;
+  return <AuthForm title="Admin Login" error={error} showForgotPassword={false} />;
 }

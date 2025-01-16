@@ -11,9 +11,10 @@ import { cleanupSession } from "@/utils/auth-cleanup";
 interface AuthFormProps {
   title: string;
   error?: string;
+  showForgotPassword?: boolean;
 }
 
-export function AuthForm({ title, error: propError }: AuthFormProps) {
+export function AuthForm({ title, error: propError, showForgotPassword = true }: AuthFormProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
@@ -175,7 +176,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         }}
         providers={[]}
         redirectTo={baseUrl}
-        showLinks={true}
+        showLinks={showForgotPassword}
         localization={{
           variables: {
             sign_in: {
