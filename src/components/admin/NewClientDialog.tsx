@@ -36,8 +36,7 @@ export function NewClientDialog() {
             first_name: firstName,
             last_name: lastName,
             role: 'client'
-          },
-          emailRedirectTo: window.location.origin
+          }
         }
       });
 
@@ -49,6 +48,9 @@ export function NewClientDialog() {
       if (!data.user) {
         throw new Error("No user data returned from signup");
       }
+
+      // Add a small delay to ensure the trigger completes
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       console.log("Client creation successful");
       toast.success("Client has been added successfully");
