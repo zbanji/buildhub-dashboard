@@ -21,7 +21,6 @@ export function AuthForm({ title, error: propError, showSignUp = false }: AuthFo
   const { message, error, setError } = useAuthMessages(propError);
   
   const baseUrl = window.location.origin;
-  const resetPasswordRedirectTo = `${baseUrl}/client/login?type=recovery`;
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -84,6 +83,8 @@ export function AuthForm({ title, error: propError, showSignUp = false }: AuthFo
       errorMessage = "Invalid email or password.";
     } else if (error.message.includes("Email not confirmed")) {
       errorMessage = "Please verify your email address before signing in.";
+    } else if (error.message.includes("Database error saving new user")) {
+      errorMessage = "Error creating account. Please try again later.";
     }
     
     setError(errorMessage);
@@ -98,11 +99,8 @@ export function AuthForm({ title, error: propError, showSignUp = false }: AuthFo
         view={view}
         appearance={{ theme: ThemeSupa }}
         providers={[]}
-        redirectTo={baseUrl}
+        redirectTo={`${baseUrl}/client/login`}
         showLinks={showSignUp}
-        queryParams={{
-          password_reset_redirect_to: resetPasswordRedirectTo,
-        }}
         magicLink={false}
         socialLayout="horizontal"
         theme="default"
