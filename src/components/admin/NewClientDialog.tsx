@@ -28,9 +28,13 @@ export function NewClientDialog() {
     try {
       console.log("Starting client signup process");
       
+      // Generate a temporary password
+      const tempPassword = 'Password01.';
+      
+      // First create the user
       const { data, error } = await supabase.auth.signUp({
         email,
-        password: 'Password01.',
+        password: tempPassword,
         options: {
           data: {
             first_name: firstName,
@@ -48,9 +52,6 @@ export function NewClientDialog() {
       if (!data.user) {
         throw new Error("No user data returned from signup");
       }
-
-      // Add a small delay to ensure the trigger completes
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
       console.log("Client creation successful");
       toast.success("Client has been added successfully");
