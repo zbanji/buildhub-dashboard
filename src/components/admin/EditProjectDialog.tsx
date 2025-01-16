@@ -38,55 +38,88 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
+    const fetchProjectDetails = async () => {
+      try {
+        // First check if we have a valid session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session) {
+          console.error("Session error:", sessionError);
+          toast({
+            title: "Session Error",
+            description: "Please sign in again to continue.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { data: project, error: projectError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', projectId)
+          .single();
+
+        if (projectError) throw projectError;
+
+        const { data: milestonesData, error: milestonesError } = await supabase
+          .from('project_milestones')
+          .select('*')
+          .eq('project_id', projectId);
+
+        if (milestonesError) throw milestonesError;
+
+        if (mounted) {
+          setProjectName(project.name);
+          setBudget(project.budget.toString());
+          setSquareFootage(project.square_footage.toString());
+          setPlannedCompletion(project.planned_completion);
+          setDescription(project.description || "");
+          
+          const formattedMilestones = milestonesData.map(m => ({
+            id: m.id,
+            name: m.name,
+            description: m.description || "",
+            plannedCompletion: m.planned_completion
+          }));
+          
+          setMilestones(formattedMilestones);
+          setExistingMilestoneIds(milestonesData.map(m => m.id));
+        }
+      } catch (error) {
+        console.error('Error fetching project details:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load project details",
+          variant: "destructive",
+        });
+      }
+    };
+
     if (projectId && open) {
       fetchProjectDetails();
     }
-  }, [projectId, open]);
 
-  const fetchProjectDetails = async () => {
-    try {
-      const { data: project, error: projectError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
-
-      if (projectError) throw projectError;
-
-      const { data: milestonesData, error: milestonesError } = await supabase
-        .from('project_milestones')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (milestonesError) throw milestonesError;
-
-      setProjectName(project.name);
-      setBudget(project.budget.toString());
-      setSquareFootage(project.square_footage.toString());
-      setPlannedCompletion(project.planned_completion);
-      setDescription(project.description || "");
-      
-      const formattedMilestones = milestonesData.map(m => ({
-        id: m.id,
-        name: m.name,
-        description: m.description || "",
-        plannedCompletion: m.planned_completion
-      }));
-      
-      setMilestones(formattedMilestones);
-      setExistingMilestoneIds(milestonesData.map(m => m.id));
-    } catch (error) {
-      console.error('Error fetching project details:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load project details",
-        variant: "destructive",
-      });
-    }
-  };
+    return () => {
+      mounted = false;
+    };
+  }, [projectId, open, toast]);
 
   const handleSubmit = async () => {
     try {
+      // Check session before making updates
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+      if (sessionError || !session) {
+        toast({
+          title: "Session Error",
+          description: "Please sign in again to continue.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Update project details
       const { error: projectError } = await supabase
         .from('projects')
