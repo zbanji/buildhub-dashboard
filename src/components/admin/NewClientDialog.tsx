@@ -31,15 +31,15 @@ export function NewClientDialog() {
       // Generate a random password
       const tempPassword = Math.random().toString(36).slice(-8);
       
-      // Create the user with role in metadata
+      // Create the user with metadata for the trigger
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password: tempPassword,
         options: {
           data: {
-            role: 'client',
             first_name: firstName,
-            last_name: lastName
+            last_name: lastName,
+            role: 'client'
           }
         }
       });
@@ -51,22 +51,6 @@ export function NewClientDialog() {
 
       if (!signUpData.user) {
         throw new Error("No user data returned from signup");
-      }
-
-      // Wait a moment for the trigger to create the profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Update the profile name
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          name: `${firstName} ${lastName}`.trim()
-        })
-        .eq('id', signUpData.user.id);
-
-      if (profileError) {
-        console.error("Profile update error:", profileError);
-        throw profileError;
       }
 
       console.log("Client creation successful");
