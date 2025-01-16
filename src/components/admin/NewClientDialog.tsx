@@ -28,13 +28,10 @@ export function NewClientDialog() {
     try {
       console.log("Starting client signup process");
       
-      // Generate a random password
-      const tempPassword = Math.random().toString(36).slice(-8);
-      
-      // Create the user with metadata for the trigger
+      // Create the user with metadata
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
-        password: tempPassword,
+        password: 'Password01.',
         options: {
           data: {
             first_name: firstName,
@@ -51,6 +48,20 @@ export function NewClientDialog() {
 
       if (!signUpData.user) {
         throw new Error("No user data returned from signup");
+      }
+
+      // Update the profile with the name
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          name: `${firstName} ${lastName}`,
+          role: 'client'
+        })
+        .eq('id', signUpData.user.id);
+
+      if (profileError) {
+        console.error("Profile update error:", profileError);
+        throw profileError;
       }
 
       console.log("Client creation successful");
