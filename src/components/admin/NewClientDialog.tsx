@@ -28,8 +28,7 @@ export function NewClientDialog() {
     try {
       console.log("Starting client signup process");
       
-      // Create the user with metadata
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password: 'Password01.',
         options: {
@@ -37,21 +36,19 @@ export function NewClientDialog() {
             first_name: firstName,
             last_name: lastName,
             role: 'client'
-          }
+          },
+          emailRedirectTo: window.location.origin
         }
       });
 
-      if (signUpError) {
-        console.error("Signup error:", signUpError);
-        throw signUpError;
+      if (error) {
+        console.error("Signup error:", error);
+        throw error;
       }
 
-      if (!signUpData.user) {
+      if (!data.user) {
         throw new Error("No user data returned from signup");
       }
-
-      // Add a small delay to allow the trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
       console.log("Client creation successful");
       toast.success("Client has been added successfully");
