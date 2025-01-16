@@ -13,10 +13,10 @@ import { ClientForm } from "./client/ClientForm";
 import { useClientSignup } from "@/hooks/admin/useClientSignup";
 
 export function NewClientDialog() {
+  const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [open, setOpen] = useState(false);
   const { signupClient, loading } = useClientSignup();
 
   const handleSubmit = async (e: React.FormEvent) => {

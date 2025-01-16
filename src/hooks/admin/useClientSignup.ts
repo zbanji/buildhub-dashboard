@@ -7,27 +7,25 @@ export function useClientSignup() {
 
   const signupClient = async (email: string, firstName: string, lastName: string) => {
     setLoading(true);
+    console.log("Starting client signup process:", { email, firstName, lastName });
 
     try {
-      console.log("Starting client signup process with:", { email, firstName, lastName });
-      
-      // Create the name for the profiles table
-      const name = `${firstName} ${lastName}`.trim();
+      const fullName = `${firstName} ${lastName}`.trim();
       
       const { data, error } = await supabase.auth.signUp({
         email,
-        password: 'Password01.',
+        password: Math.random().toString(36).slice(-12) + "A1!", // Generate secure random password
         options: {
           data: {
-            name,
+            name: fullName,
             role: 'client'
           }
         }
       });
 
       if (error) {
-        console.error("Signup error details:", error);
-        toast.error(error.message || "Failed to add client");
+        console.error("Signup error:", error);
+        toast.error(error.message || "Failed to create client account");
         return false;
       }
 
@@ -38,11 +36,11 @@ export function useClientSignup() {
       }
 
       console.log("Client creation successful:", data.user);
-      toast.success("Client has been added successfully");
+      toast.success("Client account created successfully. They will receive an email to set their password.");
       return true;
     } catch (error: any) {
-      console.error("Error creating client:", error);
-      toast.error(error.message || "Failed to add client. Please try again.");
+      console.error("Error in client signup:", error);
+      toast.error(error.message || "An unexpected error occurred");
       return false;
     } finally {
       setLoading(false);

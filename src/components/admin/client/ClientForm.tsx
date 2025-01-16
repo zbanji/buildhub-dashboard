@@ -31,7 +31,9 @@ export function ClientForm({
           id="firstName"
           value={firstName}
           onChange={(e) => onFirstNameChange(e.target.value)}
+          placeholder="Enter first name"
           required
+          disabled={loading}
         />
       </div>
       <div className="space-y-2">
@@ -40,7 +42,9 @@ export function ClientForm({
           id="lastName"
           value={lastName}
           onChange={(e) => onLastNameChange(e.target.value)}
+          placeholder="Enter last name"
           required
+          disabled={loading}
         />
       </div>
       <div className="space-y-2">
@@ -50,11 +54,13 @@ export function ClientForm({
           type="email"
           value={email}
           onChange={(e) => onEmailChange(e.target.value)}
+          placeholder="Enter email address"
           required
+          disabled={loading}
         />
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Adding..." : "Add Client"}
+        {loading ? "Creating Account..." : "Create Client Account"}
       </Button>
     </form>
   );
