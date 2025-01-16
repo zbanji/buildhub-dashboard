@@ -99,8 +99,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
           setError("");
           setView("sign_in");
         }
-      } else if (event === 'TOKEN_REFRESHED') {
-        console.log("Token refreshed successfully");
       }
     });
 
