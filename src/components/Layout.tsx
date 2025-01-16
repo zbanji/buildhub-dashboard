@@ -12,35 +12,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     try {
-      // First check if we have a valid session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error("Session error:", sessionError);
-        // If there's a session error, we should clean up anyway
-        await cleanupSession();
-        navigate(userRole === 'admin' ? '/admin/login' : '/client/login');
-        return;
-      }
-
-      if (session) {
-        // Only attempt to sign out if we have a session
-        const { error: signOutError } = await supabase.auth.signOut();
-        if (signOutError) {
-          console.error("Sign out error:", signOutError);
-          toast({
-            title: "Error",
-            description: "Failed to sign out properly. Please try again.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-
-      // Clean up session data and redirect
+      // Clean up session data first
       await cleanupSession();
-      navigate(userRole === 'admin' ? '/admin/login' : '/client/login');
       
+      // Then redirect and show success message
+      navigate(userRole === 'admin' ? '/admin/login' : '/client/login');
       toast({
         title: "Success",
         description: "You have been signed out successfully.",
@@ -52,6 +28,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+      // Still attempt to redirect on error
+      navigate(userRole === 'admin' ? '/admin/login' : '/client/login');
     }
   };
 

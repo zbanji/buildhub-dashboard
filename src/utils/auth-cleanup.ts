@@ -2,16 +2,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const cleanupSession = async () => {
   try {
-    // First try to get the current session
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    // Only attempt to sign out if there's an active session
-    if (session) {
-      await supabase.auth.signOut();
-    }
-    
-    // Clear all local storage data
+    // Clear all local storage data first
     localStorage.clear();
+    
+    // Then attempt to sign out if there's a session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await supabase.auth.signOut({ scope: 'local' });
+    }
     
     // Clear any cached data
     if ('caches' in window) {
@@ -22,7 +20,7 @@ export const cleanupSession = async () => {
     }
   } catch (err) {
     console.error('Cache cleanup error:', err);
-    // Even if sign out fails, still clear local data
+    // Even if cleanup fails, still clear local data
     localStorage.clear();
   }
 };
