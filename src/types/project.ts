@@ -52,3 +52,10 @@ export interface ProjectMedia {
   file_type: 'image' | 'video' | 'document';
   created_at?: string;
 }
+
+export interface ProjectMilestone {
+  id?: string;
+  name: string;
+  description: string;
+  plannedCompletion: string;
+}
