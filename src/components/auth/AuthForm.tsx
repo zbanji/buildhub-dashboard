@@ -33,6 +33,12 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         try {
           const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
           if (sessionError) {
+            if (sessionError.message.includes('refresh_token_not_found')) {
+              console.log("Invalid refresh token, cleaning up session");
+              await cleanupSession();
+              setError("Your session has expired. Please sign in again.");
+              return;
+            }
             handleAuthError(sessionError);
           }
         } catch (err) {
@@ -43,6 +49,12 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         try {
           const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
           if (sessionError) {
+            if (sessionError.message.includes('refresh_token_not_found')) {
+              console.log("Invalid refresh token, cleaning up session");
+              await cleanupSession();
+              setError("Your session has expired. Please sign in again.");
+              return;
+            }
             handleAuthError(sessionError);
           } else if (currentSession) {
             navigate('/');
@@ -87,8 +99,21 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
           setError("");
           setView("sign_in");
         }
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log("Token refreshed successfully");
       }
     });
+
+    // Check for existing invalid session on mount
+    const checkExistingSession = async () => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError && sessionError.message.includes('refresh_token_not_found')) {
+        console.log("Found invalid session on mount, cleaning up");
+        await cleanupSession();
+      }
+    };
+    
+    checkExistingSession();
 
     const type = searchParams.get("type");
     if (type === "recovery") {
@@ -110,7 +135,9 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     
     let errorMessage = "An error occurred during authentication.";
     
-    if (error.message.includes("invalid_credentials") || 
+    if (error.message.includes("refresh_token_not_found")) {
+      errorMessage = "Your session has expired. Please sign in again.";
+    } else if (error.message.includes("invalid_credentials") || 
         error.message.includes("Invalid login credentials") ||
         error.message.includes("invalid_grant")) {
       errorMessage = "Invalid email or password. Please check your credentials and try again.";
