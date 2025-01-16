@@ -2,6 +2,11 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+const isValidEmail = (email: string) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
 export function useClientSignup() {
   const [loading, setLoading] = useState(false);
 
@@ -16,6 +21,11 @@ export function useClientSignup() {
         return false;
       }
 
+      if (!isValidEmail(email)) {
+        toast.error("Please enter a valid email address");
+        return false;
+      }
+
       const fullName = `${firstName} ${lastName}`.trim();
       
       // Generate a secure random password (at least 8 chars, including uppercase, lowercase, and number)
@@ -24,20 +34,24 @@ export function useClientSignup() {
                       Math.floor(Math.random() * 10);
 
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.toLowerCase().trim(),
         password,
         options: {
           data: {
             name: fullName,
             role: 'client',
-            email: email // Include email in metadata for profile creation
+            email: email.toLowerCase().trim()
           }
         }
       });
 
       if (error) {
         console.error("Signup error:", error);
-        toast.error(error.message || "Failed to create client account");
+        if (error.message.includes("email_address_invalid")) {
+          toast.error("Please enter a valid email address");
+        } else {
+          toast.error(error.message || "Failed to create client account");
+        }
         return false;
       }
 
