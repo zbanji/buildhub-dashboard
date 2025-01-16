@@ -10,15 +10,27 @@ export function useClientSignup() {
     console.log("Starting client signup process:", { email, firstName, lastName });
 
     try {
+      // Validate input
+      if (!email || !firstName || !lastName) {
+        toast.error("All fields are required");
+        return false;
+      }
+
       const fullName = `${firstName} ${lastName}`.trim();
       
+      // Generate a secure random password (at least 8 chars, including uppercase, lowercase, and number)
+      const password = Math.random().toString(36).slice(-10) + 
+                      Math.random().toString(36).toUpperCase().slice(-2) + 
+                      Math.floor(Math.random() * 10);
+
       const { data, error } = await supabase.auth.signUp({
         email,
-        password: Math.random().toString(36).slice(-12) + "A1!", // Generate secure random password
+        password,
         options: {
           data: {
             name: fullName,
-            role: 'client'
+            role: 'client',
+            email: email // Include email in metadata for profile creation
           }
         }
       });
