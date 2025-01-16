@@ -27,14 +27,17 @@ export function NewClientDialog() {
     try {
       console.log("Starting client signup process");
       
+      // Generate a random password
+      const tempPassword = Math.random().toString(36).slice(-8);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
-        password: Math.random().toString(36).slice(-8),
+        password: tempPassword,
         options: {
           data: {
             role: 'client',
-            email: email,
-            name: `${firstName} ${lastName}`.trim()
+            name: `${firstName} ${lastName}`.trim(),
+            email: email
           }
         }
       });
