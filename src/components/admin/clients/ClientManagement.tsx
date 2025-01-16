@@ -1,115 +1,39 @@
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { ClientCard } from "./ClientCard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { NewClientDialog } from "@/components/admin/NewClientDialog";
-import { ClientCard } from "./ClientCard";
-import { Client } from "./types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function ClientManagement() {
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [editName, setEditName] = useState("");
-  const { toast } = useToast();
-
-  const { data: clients = [], refetch: refetchClients } = useQuery({
+  const { data: clients, isLoading } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
-      const { data: clientsData, error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          name,
-          email,
-          projects (
-            id,
-            name
-          )
-        `)
+        .select('*')
         .eq('role', 'client');
-
-      if (error) {
-        toast({
-          title: "Error fetching clients",
-          description: error.message,
-          variant: "destructive",
-        });
-        return [];
-      }
-
-      return clientsData as Client[];
+      
+      if (error) throw error;
+      return data;
     }
   });
 
-  const handleUpdateClient = async (clientId: string, newName: string) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ name: newName })
-      .eq('id', clientId);
-
-    if (error) {
-      toast({
-        title: "Error updating client",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Success",
-      description: "Client information updated successfully",
-    });
-
-    refetchClients();
-  };
-
-  const handleDeleteProject = async (projectId: string) => {
-    const { error } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', projectId);
-
-    if (error) {
-      toast({
-        title: "Error deleting project",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Success",
-      description: "Project deleted successfully",
-    });
-
-    refetchClients();
-  };
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+      </div>
+    );
+  }
 
   return (
-    <>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Client Management</h1>
-        <NewClientDialog />
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {clients?.map((client) => (
+          <ClientCard key={client.id} client={client} />
+        ))}
       </div>
-      <Card>
-        <CardContent className="pt-6">
-          <div className="space-y-6">
-            {clients.map((client) => (
-              <ClientCard
-                key={client.id}
-                client={client}
-                onUpdateClient={handleUpdateClient}
-                onDeleteProject={handleDeleteProject}
-                editName={editName}
-                setEditName={setEditName}
-                setSelectedClient={setSelectedClient}
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </>
+    </div>
   );
 }

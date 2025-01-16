@@ -16,5 +16,5 @@ export default function ClientLogin() {
     );
   }
 
-  return <AuthForm title="Client Login" error={error} />;
+  return <AuthForm title="Client Portal" error={error} showSignUp={true} />;
 }
