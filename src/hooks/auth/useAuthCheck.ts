@@ -8,56 +8,71 @@ export function useAuthCheck(allowedRole: "admin" | "client") {
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     const checkUser = async () => {
       try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        // First get the session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (userError) {
-          console.error("Auth error:", userError);
-          toast({
-            title: "Authentication Error",
-            description: "Please sign in again to continue.",
-            variant: "destructive",
-          });
-          setIsLoading(false);
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          if (mounted) {
+            setIsAuthorized(false);
+            setIsLoading(false);
+          }
           return;
         }
 
-        if (user) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .maybeSingle();
-          
-          if (profileError) {
-            console.error("Profile fetch error:", profileError);
-            toast({
-              title: "Error",
-              description: "Failed to verify user role. Please try logging in again.",
-              variant: "destructive",
-            });
-            await supabase.auth.signOut();
+        if (!session) {
+          if (mounted) {
+            setIsAuthorized(false);
             setIsLoading(false);
-            return;
           }
-          
-          setIsAuthorized(profile?.role === allowedRole);
+          return;
         }
-        setIsLoading(false);
+
+        // Then check the user's role
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle();
+          
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+          if (mounted) {
+            setIsAuthorized(false);
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        if (mounted) {
+          setIsAuthorized(profile?.role === allowedRole);
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error("Protected route error:", error);
-        setIsLoading(false);
+        if (mounted) {
+          setIsAuthorized(false);
+          setIsLoading(false);
+        }
       }
     };
 
+    // Initial check
     checkUser();
 
+    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       checkUser();
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [allowedRole, toast]);
 
   return { isLoading, isAuthorized };
