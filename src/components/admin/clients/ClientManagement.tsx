@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { ClientCard } from "./ClientCard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Client } from "./types";
+import { toast } from "sonner";
 
 export function ClientManagement() {
-  const { data: clients, isLoading } = useQuery({
+  const [editName, setEditName] = useState("");
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  const { data: clients, isLoading, refetch } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
       const { data: profilesData, error: profilesError } = await supabase
@@ -38,6 +43,40 @@ export function ClientManagement() {
     }
   });
 
+  const handleUpdateClient = async (id: string, name: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ name })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success("Client updated successfully");
+      refetch();
+    } catch (error) {
+      console.error('Error updating client:', error);
+      toast.error("Failed to update client");
+    }
+  };
+
+  const handleDeleteProject = async (projectId: string) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      toast.success("Project deleted successfully");
+      refetch();
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error("Failed to delete project");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -52,7 +91,15 @@ export function ClientManagement() {
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {clients?.map((client) => (
-          <ClientCard key={client.id} client={client} />
+          <ClientCard
+            key={client.id}
+            client={client}
+            onUpdateClient={handleUpdateClient}
+            onDeleteProject={handleDeleteProject}
+            editName={editName}
+            setEditName={setEditName}
+            setSelectedClient={setSelectedClient}
+          />
         ))}
       </div>
     </div>
