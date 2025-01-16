@@ -18,31 +18,40 @@ export function NewClientDialog() {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [open, setOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      console.log("Starting client signup process");
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password: Math.random().toString(36).slice(-8),
         options: {
           data: {
-            first_name: firstName,
-            last_name: lastName,
-            role: 'client'
+            role: 'client',
+            email: email,
+            name: `${firstName} ${lastName}`.trim()
           }
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Signup error:", error);
+        throw error;
+      }
 
+      console.log("Signup successful:", data);
       toast.success("Client has been added successfully");
       setEmail("");
       setFirstName("");
       setLastName("");
+      setOpen(false);
     } catch (error) {
+      console.error("Error details:", error);
       toast.error("Failed to add client. Please try again.");
     } finally {
       setLoading(false);
@@ -50,7 +59,7 @@ export function NewClientDialog() {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <UserPlus className="mr-2 h-4 w-4" />
