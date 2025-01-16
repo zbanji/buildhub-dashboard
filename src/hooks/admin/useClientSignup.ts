@@ -11,6 +11,9 @@ export function useClientSignup() {
     try {
       console.log("Starting client signup process");
       
+      // Create the full name for the profiles table
+      const fullName = `${firstName} ${lastName}`.trim();
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password: 'Password01.',
@@ -19,8 +22,7 @@ export function useClientSignup() {
             first_name: firstName,
             last_name: lastName,
             role: 'client',
-            // Include full name for profiles table
-            name: `${firstName} ${lastName}`.trim()
+            name: fullName // This matches the profiles table expectation
           }
         }
       });
