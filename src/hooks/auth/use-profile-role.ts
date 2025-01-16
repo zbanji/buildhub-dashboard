@@ -1,14 +1,21 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export async function checkUserRole(userId: string, expectedRole: 'admin' | 'client') {
-  const { data: profileData, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
+export async function checkUserRole(userId: string, expectedRole: string) {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
 
-  if (profileError) throw profileError;
-  if (!profileData) throw new Error("User profile not found");
+  if (error) {
+    console.error("Error checking user role:", error);
+    throw error;
+  }
 
-  return profileData.role === expectedRole;
+  if (!profile) {
+    console.error("No profile found for user:", userId);
+    throw new Error("User profile not found");
+  }
+
+  return profile.role === expectedRole;
 }
