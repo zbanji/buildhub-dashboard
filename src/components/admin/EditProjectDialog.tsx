@@ -42,7 +42,6 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
 
     const fetchProjectDetails = async () => {
       try {
-        // First check if we have a valid session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
@@ -108,7 +107,6 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
 
   const handleSubmit = async () => {
     try {
-      // Check session before making updates
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
       if (sessionError || !session) {

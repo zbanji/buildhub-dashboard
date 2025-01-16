@@ -20,7 +20,7 @@ interface UploadMediaButtonProps {
 export function UploadMediaButton({ projectId, onUploadComplete }: UploadMediaButtonProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedMilestone, setSelectedMilestone] = useState<string>("");
-  const { data: milestones } = useProjectMilestones(projectId);
+  const { data: milestones = [] } = useProjectMilestones(projectId);
   const { toast } = useToast();
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,7 +83,7 @@ export function UploadMediaButton({ projectId, onUploadComplete }: UploadMediaBu
           <SelectValue placeholder="Select a milestone" />
         </SelectTrigger>
         <SelectContent>
-          {milestones?.map((milestone) => (
+          {milestones.map((milestone) => (
             <SelectItem key={milestone.id} value={milestone.id}>
               {milestone.name}
             </SelectItem>
