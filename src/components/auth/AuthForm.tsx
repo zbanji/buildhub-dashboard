@@ -7,6 +7,7 @@ import { AuthContainer } from "./AuthContainer";
 import { AuthMessage } from "./AuthMessage";
 import { useAuthMessages } from "@/hooks/auth/use-auth-messages";
 import { AuthError } from "@supabase/supabase-js";
+import { cleanupSession } from "@/utils/auth-cleanup";
 
 interface AuthFormProps {
   title: string;
@@ -78,6 +79,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
           }
         }
       } else if (event === 'SIGNED_OUT') {
+        await cleanupSession();
         setError("");
         setView("sign_in");
       }
