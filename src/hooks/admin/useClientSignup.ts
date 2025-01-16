@@ -3,8 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const isValidEmail = (email: string) => {
+  // Basic email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  if (!emailRegex.test(email)) return false;
+  
+  // Check for common test domains
+  const invalidDomains = ['example.com', 'test.com'];
+  const domain = email.split('@')[1].toLowerCase();
+  return !invalidDomains.includes(domain);
 };
 
 export function useClientSignup() {
@@ -22,25 +28,28 @@ export function useClientSignup() {
       }
 
       if (!isValidEmail(email)) {
-        toast.error("Please enter a valid email address");
+        toast.error("Please enter a valid email address. Test domains like example.com are not allowed.");
         return false;
       }
 
       const fullName = `${firstName} ${lastName}`.trim();
+      const cleanEmail = email.toLowerCase().trim();
       
       // Generate a secure random password (at least 8 chars, including uppercase, lowercase, and number)
       const password = Math.random().toString(36).slice(-10) + 
                       Math.random().toString(36).toUpperCase().slice(-2) + 
                       Math.floor(Math.random() * 10);
 
+      console.log("Attempting signup with:", { cleanEmail, fullName });
+
       const { data, error } = await supabase.auth.signUp({
-        email: email.toLowerCase().trim(),
+        email: cleanEmail,
         password,
         options: {
           data: {
             name: fullName,
             role: 'client',
-            email: email.toLowerCase().trim()
+            email: cleanEmail
           }
         }
       });
@@ -48,7 +57,7 @@ export function useClientSignup() {
       if (error) {
         console.error("Signup error:", error);
         if (error.message.includes("email_address_invalid")) {
-          toast.error("Please enter a valid email address");
+          toast.error("Please enter a valid business email address. Test or example domains are not allowed.");
         } else {
           toast.error(error.message || "Failed to create client account");
         }
