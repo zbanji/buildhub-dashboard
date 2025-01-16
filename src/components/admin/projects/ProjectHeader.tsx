@@ -2,10 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Project } from "@/types/project";
 import { EditProjectDialog } from "../EditProjectDialog";
 import { ProjectUpdateDialog } from "../ProjectUpdateDialog";
+import { QueryObserverResult, RefetchOptions } from "@tanstack/react-query";
 
 interface ProjectHeaderProps {
   project: Project;
-  onProjectUpdated: () => void;
+  onProjectUpdated: (options?: RefetchOptions) => Promise<QueryObserverResult<Project[], Error>>;
 }
 
 export function ProjectHeader({ project, onProjectUpdated }: ProjectHeaderProps) {
