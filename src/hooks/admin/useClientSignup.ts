@@ -9,7 +9,7 @@ export function useClientSignup() {
     setLoading(true);
 
     try {
-      console.log("Starting client signup process");
+      console.log("Starting client signup process with:", { email, firstName, lastName });
       
       // Create the full name for the profiles table
       const fullName = `${firstName} ${lastName}`.trim();
@@ -19,25 +19,25 @@ export function useClientSignup() {
         password: 'Password01.',
         options: {
           data: {
-            first_name: firstName,
-            last_name: lastName,
-            role: 'client',
-            name: fullName // This matches the profiles table expectation
+            name: fullName,
+            role: 'client'
           }
         }
       });
 
       if (error) {
-        console.error("Signup error:", error);
+        console.error("Signup error details:", error);
         toast.error(error.message || "Failed to add client");
         return false;
       }
 
       if (!data.user) {
-        throw new Error("No user data returned from signup");
+        console.error("No user data returned from signup");
+        toast.error("Failed to create client account");
+        return false;
       }
 
-      console.log("Client creation successful");
+      console.log("Client creation successful:", data.user);
       toast.success("Client has been added successfully");
       return true;
     } catch (error: any) {
