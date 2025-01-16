@@ -1,18 +1,10 @@
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Edit } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { MilestoneForm } from "./project/MilestoneForm";
+import { ProjectDialogContent } from "./project/ProjectDialogContent";
 
 interface ProjectMilestone {
   id?: string;
@@ -118,7 +110,6 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
         return;
       }
 
-      // Update project details
       const { error: projectError } = await supabase
         .from('projects')
         .update({
@@ -132,12 +123,10 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
 
       if (projectError) throw projectError;
 
-      // Get current milestone IDs from the form
       const currentMilestoneIds = milestones
         .filter(m => m.id)
         .map(m => m.id as string);
 
-      // Delete removed milestones
       const milestonesToDelete = existingMilestoneIds.filter(
         id => !currentMilestoneIds.includes(id)
       );
@@ -151,10 +140,8 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
         if (deleteError) throw deleteError;
       }
 
-      // Update existing and insert new milestones
       for (const milestone of milestones) {
         if (milestone.id) {
-          // Update existing milestone
           const { error: updateError } = await supabase
             .from('project_milestones')
             .update({
@@ -166,7 +153,6 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
 
           if (updateError) throw updateError;
         } else {
-          // Insert new milestone
           const { error: insertError } = await supabase
             .from('project_milestones')
             .insert({
@@ -197,21 +183,6 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
     }
   };
 
-  const addMilestone = () => {
-    setMilestones([...milestones, { name: "", description: "", plannedCompletion: "" }]);
-  };
-
-  const removeMilestone = (index: number) => {
-    const newMilestones = milestones.filter((_, i) => i !== index);
-    setMilestones(newMilestones);
-  };
-
-  const updateMilestone = (index: number, field: keyof ProjectMilestone, value: string) => {
-    const newMilestones = [...milestones];
-    newMilestones[index] = { ...newMilestones[index], [field]: value };
-    setMilestones(newMilestones);
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -220,55 +191,31 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
           Edit Project
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Project</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              placeholder="Project Name"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Budget ($)"
-              value={budget}
-              onChange={(e) => setBudget(e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              type="number"
-              placeholder="Square Footage"
-              value={squareFootage}
-              onChange={(e) => setSquareFootage(e.target.value)}
-            />
-            <Input
-              type="date"
-              placeholder="Planned Completion Date"
-              value={plannedCompletion}
-              onChange={(e) => setPlannedCompletion(e.target.value)}
-            />
-          </div>
-          <Textarea
-            placeholder="Project Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          
-          <MilestoneForm
-            milestones={milestones}
-            onAdd={addMilestone}
-            onRemove={removeMilestone}
-            onUpdate={updateMilestone}
-          />
-        </div>
-        <div className="flex justify-end sticky bottom-0 bg-background py-4 border-t">
-          <Button onClick={handleSubmit}>Save Changes</Button>
-        </div>
-      </DialogContent>
+      <ProjectDialogContent
+        title="Edit Project"
+        projectName={projectName}
+        setProjectName={setProjectName}
+        budget={budget}
+        setBudget={setBudget}
+        squareFootage={squareFootage}
+        setSquareFootage={setSquareFootage}
+        plannedCompletion={plannedCompletion}
+        setPlannedCompletion={setPlannedCompletion}
+        description={description}
+        setDescription={setDescription}
+        milestones={milestones}
+        onMilestoneAdd={() => setMilestones([...milestones, { name: "", description: "", plannedCompletion: "" }])}
+        onMilestoneRemove={(index) => {
+          const newMilestones = milestones.filter((_, i) => i !== index);
+          setMilestones(newMilestones);
+        }}
+        onMilestoneUpdate={(index, field, value) => {
+          const newMilestones = [...milestones];
+          newMilestones[index] = { ...newMilestones[index], [field]: value };
+          setMilestones(newMilestones);
+        }}
+        onSubmit={handleSubmit}
+      />
     </Dialog>
   );
 }

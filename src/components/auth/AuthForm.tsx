@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { AuthContainer } from "./AuthContainer";
 import { AuthMessage } from "./AuthMessage";
 import { useAuthMessages } from "@/hooks/auth/use-auth-messages";
-import { AuthError } from "@supabase/supabase-js";
 import { cleanupSession } from "@/utils/auth-cleanup";
 
 interface AuthFormProps {
@@ -30,21 +29,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       
       if (event === 'PASSWORD_RECOVERY') {
         setView("update_password");
-        try {
-          const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-          if (sessionError) {
-            if (sessionError.message.includes('refresh_token_not_found')) {
-              console.log("Invalid refresh token, cleaning up session");
-              await cleanupSession();
-              setError("Your session has expired. Please sign in again.");
-              return;
-            }
-            handleAuthError(sessionError);
-          }
-        } catch (err) {
-          console.error("Error getting session:", err);
-          setError("Failed to recover password. Please try again.");
-        }
       } else if (event === 'USER_UPDATED') {
         try {
           const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
@@ -102,17 +86,6 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
       }
     });
 
-    // Check for existing invalid session on mount
-    const checkExistingSession = async () => {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError && sessionError.message.includes('refresh_token_not_found')) {
-        console.log("Found invalid session on mount, cleaning up");
-        await cleanupSession();
-      }
-    };
-    
-    checkExistingSession();
-
     const type = searchParams.get("type");
     if (type === "recovery") {
       setView("update_password");
@@ -124,7 +97,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
     };
   }, [searchParams, setError, navigate]);
 
-  const handleAuthError = (error: AuthError) => {
+  const handleAuthError = (error: any) => {
     console.error("Auth error details:", {
       message: error.message,
       status: error.status,
@@ -202,7 +175,7 @@ export function AuthForm({ title, error: propError }: AuthFormProps) {
         }}
         providers={[]}
         redirectTo={baseUrl}
-        showLinks={false}
+        showLinks={true}
         localization={{
           variables: {
             sign_in: {

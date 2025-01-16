@@ -10,6 +10,7 @@ import { UploadMediaButton } from "@/components/admin/projects/UploadMediaButton
 import { ClientManagement } from "@/components/admin/clients/ClientManagement";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, FolderKanban } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 export default function AdminProjects() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
@@ -49,19 +50,24 @@ export default function AdminProjects() {
                     <div className="flex flex-col gap-4 p-4 border rounded-lg bg-card">
                       <h3 className="text-lg font-semibold">Project Actions</h3>
                       <div className="flex flex-col gap-2">
-                        <EditProjectDialog 
-                          projectId={selectedProject} 
-                          onUpdate={refetchProjects}
-                        />
-                        <ProjectUpdateDialog
-                          projectId={selectedProject}
-                          milestones={milestones || []}
-                          onUpdate={refetchProjects}
-                        />
-                        <UploadMediaButton
-                          projectId={selectedProject}
-                          onUploadComplete={refetchMilestones}
-                        />
+                        <div className="space-y-2">
+                          <EditProjectDialog 
+                            projectId={selectedProject} 
+                            onUpdate={refetchProjects}
+                          />
+                          <ProjectUpdateDialog
+                            projectId={selectedProject}
+                            milestones={milestones || []}
+                            onUpdate={refetchProjects}
+                          />
+                        </div>
+                        <Separator className="my-2" />
+                        <div className="space-y-2">
+                          <UploadMediaButton
+                            projectId={selectedProject}
+                            onUploadComplete={refetchMilestones}
+                          />
+                        </div>
                       </div>
                     </div>
                     <ProjectMessages
