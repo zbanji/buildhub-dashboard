@@ -50,19 +50,8 @@ export function NewClientDialog() {
         throw new Error("No user data returned from signup");
       }
 
-      // Update the profile with the name
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          name: `${firstName} ${lastName}`,
-          role: 'client'
-        })
-        .eq('id', signUpData.user.id);
-
-      if (profileError) {
-        console.error("Profile update error:", profileError);
-        throw profileError;
-      }
+      // Add a small delay to allow the trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       console.log("Client creation successful");
       toast.success("Client has been added successfully");
@@ -70,9 +59,9 @@ export function NewClientDialog() {
       setFirstName("");
       setLastName("");
       setOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating client:", error);
-      toast.error("Failed to add client. Please try again.");
+      toast.error(error.message || "Failed to add client. Please try again.");
     } finally {
       setLoading(false);
     }
