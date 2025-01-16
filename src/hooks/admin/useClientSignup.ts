@@ -11,15 +11,15 @@ export function useClientSignup() {
     try {
       console.log("Starting client signup process with:", { email, firstName, lastName });
       
-      // Create the full name for the profiles table
-      const fullName = `${firstName} ${lastName}`.trim();
+      // Create the name for the profiles table
+      const name = `${firstName} ${lastName}`.trim();
       
       const { data, error } = await supabase.auth.signUp({
         email,
         password: 'Password01.',
         options: {
           data: {
-            name: fullName,
+            name,
             role: 'client'
           }
         }
