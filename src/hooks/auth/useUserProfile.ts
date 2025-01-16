@@ -44,26 +44,24 @@ export function useUserProfile() {
           throw userError;
         }
 
-        if (mounted) {
+        if (mounted && user) {
           setUser(user);
           
-          if (user) {
-            // Get profile data
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('role, name')
-              .eq('id', user.id)
-              .single();
+          // Get profile data
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role, name')
+            .eq('id', user.id)
+            .single();
 
-            if (profileError) {
-              console.error("Profile fetch error:", profileError);
-              throw profileError;
-            }
+          if (profileError) {
+            console.error("Profile fetch error:", profileError);
+            throw profileError;
+          }
 
-            if (mounted) {
-              setUserRole(profile?.role || null);
-              setUserName(profile?.name || null);
-            }
+          if (mounted) {
+            setUserRole(profile?.role || null);
+            setUserName(profile?.name || null);
           }
         }
       } catch (error) {
@@ -89,7 +87,7 @@ export function useUserProfile() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
       
-      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+      if (event === 'SIGNED_OUT') {
         if (mounted) {
           setUser(null);
           setUserRole(null);
