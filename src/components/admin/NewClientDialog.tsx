@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -30,14 +31,13 @@ export function NewClientDialog() {
       // Generate a random password
       const tempPassword = Math.random().toString(36).slice(-8);
       
+      // Create the user with minimal metadata first
       const { data, error } = await supabase.auth.signUp({
         email,
         password: tempPassword,
         options: {
           data: {
-            role: 'client',
-            name: `${firstName} ${lastName}`.trim(),
-            email: email
+            role: 'client'
           }
         }
       });
@@ -45,6 +45,22 @@ export function NewClientDialog() {
       if (error) {
         console.error("Signup error:", error);
         throw error;
+      }
+
+      // If signup successful, update the profile
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            name: `${firstName} ${lastName}`.trim(),
+            email: email
+          })
+          .eq('id', data.user.id);
+
+        if (profileError) {
+          console.error("Profile update error:", profileError);
+          throw profileError;
+        }
       }
 
       console.log("Signup successful:", data);
@@ -72,6 +88,9 @@ export function NewClientDialog() {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
+          <DialogDescription>
+            Create a new client account. They will receive an email to set their password.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
