@@ -11,23 +11,24 @@ export function useClientSignup() {
     try {
       console.log("Starting client signup process");
       
-      const tempPassword = 'Password01.';
-      
       const { data, error } = await supabase.auth.signUp({
         email,
-        password: tempPassword,
+        password: 'Password01.',
         options: {
           data: {
             first_name: firstName,
             last_name: lastName,
-            role: 'client'
+            role: 'client',
+            // Include full name for profiles table
+            name: `${firstName} ${lastName}`.trim()
           }
         }
       });
 
       if (error) {
         console.error("Signup error:", error);
-        throw error;
+        toast.error(error.message || "Failed to add client");
+        return false;
       }
 
       if (!data.user) {
