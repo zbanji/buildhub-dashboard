@@ -2,18 +2,39 @@ import { ClientCard } from "./ClientCard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Client } from "./types";
 
 export function ClientManagement() {
   const { data: clients, isLoading } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, name, email, role')
         .eq('role', 'client');
-      
-      if (error) throw error;
-      return data;
+
+      if (profilesError) throw profilesError;
+
+      const { data: projectsData, error: projectsError } = await supabase
+        .from('projects')
+        .select('id, name, client_id');
+
+      if (projectsError) throw projectsError;
+
+      // Map projects to their respective clients
+      const clientsWithProjects = profilesData.map((profile): Client => ({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        projects: projectsData
+          .filter(project => project.client_id === profile.id)
+          .map(project => ({
+            id: project.id,
+            name: project.name
+          }))
+      }));
+
+      return clientsWithProjects;
     }
   });
 
