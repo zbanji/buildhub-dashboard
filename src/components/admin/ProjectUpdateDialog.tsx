@@ -33,12 +33,10 @@ export function ProjectUpdateDialog({
 
   // Reset form state when dialog opens
   useEffect(() => {
-    if (open) {
+    if (open && milestones && milestones.length > 0) {
       setStatus(currentStatus);
-      if (milestones && milestones.length > 0) {
-        setSelectedMilestone(milestones[0].id);
-        setProgress([milestones[0].progress || 0]);
-      }
+      setSelectedMilestone(milestones[0].id);
+      setProgress([milestones[0].progress || 0]);
     }
   }, [open, currentStatus, milestones]);
 
@@ -111,6 +109,8 @@ export function ProjectUpdateDialog({
     }
   };
 
+  console.log('Current milestones:', milestones); // Debug log
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -160,13 +160,13 @@ export function ProjectUpdateDialog({
                 <Select 
                   value={selectedMilestone} 
                   onValueChange={setSelectedMilestone}
-                  disabled={milestones.length === 0}
+                  disabled={!milestones || milestones.length === 0}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={milestones.length === 0 ? "No milestones available" : "Select milestone"} />
+                    <SelectValue placeholder={!milestones || milestones.length === 0 ? "No milestones available" : "Select milestone"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {milestones.map((milestone) => (
+                    {milestones && milestones.map((milestone) => (
                       <SelectItem key={milestone.id} value={milestone.id}>
                         {milestone.name}
                       </SelectItem>
