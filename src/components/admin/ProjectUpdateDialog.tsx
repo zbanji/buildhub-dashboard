@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Milestone, Project } from "@/hooks/use-project-data";
@@ -14,16 +14,42 @@ type ProjectStatus = "planning" | "in_progress" | "review" | "completed";
 
 export interface ProjectUpdateDialogProps {
   projectId: string;
+  currentStatus: ProjectStatus;
   milestones?: Milestone[];
   onUpdate: (options?: RefetchOptions) => Promise<QueryObserverResult<Project[], Error>>;
 }
 
-export function ProjectUpdateDialog({ projectId, milestones = [], onUpdate }: ProjectUpdateDialogProps) {
+export function ProjectUpdateDialog({ 
+  projectId, 
+  currentStatus,
+  milestones = [], 
+  onUpdate 
+}: ProjectUpdateDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const [status, setStatus] = useState<ProjectStatus>("planning");
+  const [status, setStatus] = useState<ProjectStatus>(currentStatus);
   const [selectedMilestone, setSelectedMilestone] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
+
+  // Reset form state when dialog opens
+  useEffect(() => {
+    if (open) {
+      setStatus(currentStatus);
+      if (milestones.length > 0) {
+        const firstMilestone = milestones[0];
+        setSelectedMilestone(firstMilestone.id);
+        setProgress(firstMilestone.progress || 0);
+      }
+    }
+  }, [open, currentStatus, milestones]);
+
+  // Update progress when milestone selection changes
+  useEffect(() => {
+    const milestone = milestones.find(m => m.id === selectedMilestone);
+    if (milestone) {
+      setProgress(milestone.progress || 0);
+    }
+  }, [selectedMilestone, milestones]);
 
   const handleProjectStatusUpdate = async () => {
     const { error: projectError } = await supabase

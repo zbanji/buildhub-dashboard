@@ -19,9 +19,11 @@ interface MilestoneCardProps {
 
 export function MilestoneCard({ milestones, selectedMilestone, onMilestoneSelect }: MilestoneCardProps) {
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Project Milestones</CardTitle>
+    <Card className="h-full overflow-hidden bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-lg">
+      <CardHeader className="bg-gradient-to-r from-purple-100/50 to-blue-100/50">
+        <CardTitle className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+          Project Milestones
+        </CardTitle>
         <p className="text-sm text-muted-foreground">Click a milestone to view its media</p>
       </CardHeader>
       <CardContent>
