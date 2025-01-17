@@ -36,45 +36,44 @@ export function ProjectUpdateDialog({
     if (open) {
       setStatus(currentStatus);
       if (milestones && milestones.length > 0) {
-        const firstMilestone = milestones[0];
-        setSelectedMilestone(firstMilestone.id);
-        setProgress([firstMilestone.progress || 0]);
+        setSelectedMilestone(milestones[0].id);
+        setProgress([milestones[0].progress || 0]);
       }
     }
   }, [open, currentStatus, milestones]);
 
   // Update progress when milestone selection changes
   useEffect(() => {
-    if (selectedMilestone && milestones) {
-      const milestone = milestones.find(m => m.id === selectedMilestone);
-      if (milestone) {
-        setProgress([milestone.progress || 0]);
-      }
+    const selectedMilestoneData = milestones.find(m => m.id === selectedMilestone);
+    if (selectedMilestoneData) {
+      setProgress([selectedMilestoneData.progress || 0]);
     }
   }, [selectedMilestone, milestones]);
 
   const handleProjectStatusUpdate = async () => {
-    const { error: projectError } = await supabase
-      .from('projects')
-      .update({ status })
-      .eq('id', projectId);
+    try {
+      const { error: projectError } = await supabase
+        .from('projects')
+        .update({ status })
+        .eq('id', projectId);
 
-    if (projectError) {
+      if (projectError) throw projectError;
+
+      toast({
+        title: "Success",
+        description: "Project status updated successfully",
+      });
+
+      await onUpdate();
+      setOpen(false);
+    } catch (error) {
+      console.error('Error updating project status:', error);
       toast({
         title: "Error",
         description: "Failed to update project status",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Success",
-      description: "Project status updated successfully",
-    });
-
-    onUpdate();
-    setOpen(false);
   };
 
   const handleMilestoneUpdate = async () => {
@@ -87,27 +86,29 @@ export function ProjectUpdateDialog({
       return;
     }
 
-    const { error: milestoneError } = await supabase
-      .from('project_milestones')
-      .update({ progress: progress[0] })
-      .eq('id', selectedMilestone);
+    try {
+      const { error: milestoneError } = await supabase
+        .from('project_milestones')
+        .update({ progress: progress[0] })
+        .eq('id', selectedMilestone);
 
-    if (milestoneError) {
+      if (milestoneError) throw milestoneError;
+
+      toast({
+        title: "Success",
+        description: "Milestone progress updated successfully",
+      });
+
+      await onUpdate();
+      setOpen(false);
+    } catch (error) {
+      console.error('Error updating milestone progress:', error);
       toast({
         title: "Error",
         description: "Failed to update milestone progress",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Success",
-      description: "Milestone progress updated successfully",
-    });
-
-    onUpdate();
-    setOpen(false);
   };
 
   return (
@@ -156,9 +157,13 @@ export function ProjectUpdateDialog({
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
                 <Label>Select Milestone</Label>
-                <Select value={selectedMilestone} onValueChange={setSelectedMilestone}>
+                <Select 
+                  value={selectedMilestone} 
+                  onValueChange={setSelectedMilestone}
+                  disabled={milestones.length === 0}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select milestone" />
+                    <SelectValue placeholder={milestones.length === 0 ? "No milestones available" : "Select milestone"} />
                   </SelectTrigger>
                   <SelectContent>
                     {milestones.map((milestone) => (
@@ -183,7 +188,11 @@ export function ProjectUpdateDialog({
                 </div>
               )}
 
-              <Button onClick={handleMilestoneUpdate} className="w-full">
+              <Button 
+                onClick={handleMilestoneUpdate} 
+                className="w-full"
+                disabled={!selectedMilestone}
+              >
                 Update Milestone Progress
               </Button>
             </CardContent>
