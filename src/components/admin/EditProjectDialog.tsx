@@ -63,9 +63,9 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
 
         if (mounted) {
           setProjectName(project.name);
-          setBudget(project.budget.toString());
-          setSquareFootage(project.square_footage.toString());
-          setPlannedCompletion(project.planned_completion);
+          setBudget(project.budget?.toString() || "");
+          setSquareFootage(project.square_footage?.toString() || "");
+          setPlannedCompletion(project.planned_completion || "");
           setDescription(project.description || "");
           
           const formattedMilestones = milestonesData.map(m => ({
@@ -110,12 +110,13 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
         return;
       }
 
+      // Update project details
       const { error: projectError } = await supabase
         .from('projects')
         .update({
           name: projectName,
-          budget: parseFloat(budget),
-          square_footage: parseInt(squareFootage),
+          budget: parseFloat(budget) || 0,
+          square_footage: parseInt(squareFootage) || 0,
           planned_completion: plannedCompletion,
           description,
         })
@@ -123,6 +124,7 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
 
       if (projectError) throw projectError;
 
+      // Handle milestone deletions
       const currentMilestoneIds = milestones
         .filter(m => m.id)
         .map(m => m.id as string);
@@ -140,8 +142,10 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
         if (deleteError) throw deleteError;
       }
 
+      // Handle milestone updates and insertions
       for (const milestone of milestones) {
         if (milestone.id) {
+          // Update existing milestone
           const { error: updateError } = await supabase
             .from('project_milestones')
             .update({
@@ -152,7 +156,8 @@ export function EditProjectDialog({ projectId, onUpdate }: EditProjectDialogProp
             .eq('id', milestone.id);
 
           if (updateError) throw updateError;
-        } else {
+        } else if (milestone.name.trim()) {
+          // Only insert new milestone if it has a name
           const { error: insertError } = await supabase
             .from('project_milestones')
             .insert({

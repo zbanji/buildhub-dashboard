@@ -9,6 +9,7 @@ import { ClientManagement } from "@/components/admin/clients/ClientManagement";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, FolderKanban } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NewProjectDialog } from "@/components/admin/NewProjectDialog";
 
 export default function AdminProjects() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
@@ -40,6 +41,10 @@ export default function AdminProjects() {
           </TabsList>
 
           <TabsContent value="projects" className="animate-fade-in">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-semibold">Projects</h1>
+              <NewProjectDialog />
+            </div>
             {selectedProjectData && (
               <ProjectHeader 
                 project={selectedProjectData} 
