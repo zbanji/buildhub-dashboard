@@ -119,6 +119,8 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
       errorMessage = "No account found with these credentials.";
     } else if (error.message.includes("Failed to fetch")) {
       errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
+    } else if (error.message.includes("missing email")) {
+      errorMessage = "Please enter your email address.";
     }
     
     setError(errorMessage);
