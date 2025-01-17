@@ -72,7 +72,7 @@ export function ProjectContent({
               milestoneName={selectedMilestoneDetails?.name}
             />
           </div>
-          <div className="h-[600px] bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-lg shadow-lg">
+          <div className="h-[600px]">
             <ProjectMessages
               selectedProject={projectId}
               messages={messages}
