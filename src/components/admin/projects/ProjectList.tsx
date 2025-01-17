@@ -41,7 +41,7 @@ export function ProjectList({
         <div className="space-y-6">
           {Object.entries(projectsByClient).map(([clientName, clientProjects]) => (
             <div key={clientName} className="space-y-2">
-              <h3 className="font-semibold text-sm text-muted-foreground">
+              <h3 className="font-semibold text-sm text-gray-600">
                 {clientName}
               </h3>
               <div className="space-y-2 pl-4">
@@ -49,7 +49,11 @@ export function ProjectList({
                   <Button
                     key={project.id}
                     variant={selectedProject === project.id ? "default" : "outline"}
-                    className="w-full justify-start bg-white hover:bg-gray-50"
+                    className={`w-full justify-start transition-all ${
+                      selectedProject === project.id 
+                        ? "bg-gradient-to-r from-purple-100 to-blue-100 text-gray-800 hover:from-purple-200 hover:to-blue-200" 
+                        : "bg-white hover:bg-gray-50"
+                    }`}
                     onClick={() => onProjectSelect(project.id)}
                   >
                     {project.name}

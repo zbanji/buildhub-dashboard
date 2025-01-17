@@ -8,7 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProjectContentProps {
   projectId: string;
-  projectName: string;  // Add this prop
+  projectName: string;
   milestones: any[];
   selectedMilestone: string | null;
   selectedMilestoneDetails: any;
@@ -20,7 +20,7 @@ interface ProjectContentProps {
 
 export function ProjectContent({
   projectId,
-  projectName,  // Add this prop
+  projectName,
   milestones,
   selectedMilestone,
   selectedMilestoneDetails,
@@ -43,12 +43,10 @@ export function ProjectContent({
 
   return (
     <div className="space-y-6">
-      {/* Project title for mobile */}
       {isMobile && (
         <h2 className="text-2xl font-bold tracking-tight">{projectName}</h2>
       )}
       
-      {/* Mobile helper text */}
       <div className="md:hidden">
         <Alert>
           <Info className="h-4 w-4" />
@@ -59,7 +57,6 @@ export function ProjectContent({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-        {/* On mobile: Show milestones first */}
         <div className="md:col-span-5 order-1 md:order-1">
           <MilestoneCard
             milestones={milestones}
@@ -75,11 +72,13 @@ export function ProjectContent({
               milestoneName={selectedMilestoneDetails?.name}
             />
           </div>
-          <ProjectMessages
-            selectedProject={projectId}
-            messages={messages}
-            onMessageSent={onMessageSent}
-          />
+          <div className="h-[600px]">
+            <ProjectMessages
+              selectedProject={projectId}
+              messages={messages}
+              onMessageSent={onMessageSent}
+            />
+          </div>
         </div>
       </div>
     </div>
