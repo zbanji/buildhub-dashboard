@@ -1,28 +1,38 @@
-import { Button } from "@/components/ui/button";
-import { Project } from "@/types/project";
-import { EditProjectDialog } from "../EditProjectDialog";
-import { ProjectUpdateDialog } from "../ProjectUpdateDialog";
-import { QueryObserverResult, RefetchOptions } from "@tanstack/react-query";
+import { Project, Milestone } from "@/types/project";
+import { EditProjectDialog } from "@/components/admin/EditProjectDialog";
+import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
 
 interface ProjectHeaderProps {
   project: Project;
-  onProjectUpdated: (options?: RefetchOptions) => Promise<QueryObserverResult<Project[], Error>>;
+  milestones: Milestone[];
+  onProjectUpdated: () => void;
+  onMilestoneUpdated: () => void;
 }
 
-export function ProjectHeader({ project, onProjectUpdated }: ProjectHeaderProps) {
+export function ProjectHeader({ 
+  project,
+  milestones,
+  onProjectUpdated,
+  onMilestoneUpdated 
+}: ProjectHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-6">
-      <h1 className="text-2xl font-semibold">{project.name}</h1>
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg">
+      <div className="space-y-1">
+        <h2 className="text-xl font-semibold">{project.name}</h2>
+        <p className="text-sm text-muted-foreground">
+          Status: {project.status.replace('_', ' ')}
+        </p>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2">
         <EditProjectDialog 
           projectId={project.id} 
-          onUpdate={onProjectUpdated}
+          onUpdate={onProjectUpdated} 
         />
-        <ProjectUpdateDialog
+        <ProjectUpdateDialog 
           projectId={project.id}
           currentStatus={project.status}
-          milestones={project.project_milestones || []}
-          onUpdate={onProjectUpdated}
+          milestones={milestones}
+          onUpdate={onMilestoneUpdated}
         />
       </div>
     </div>

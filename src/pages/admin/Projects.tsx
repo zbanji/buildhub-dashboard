@@ -19,6 +19,12 @@ export default function AdminProjects() {
 
   const selectedProjectData = projects?.find(p => p.id === selectedProject);
 
+  console.log('Projects page render:', {
+    selectedProject,
+    milestonesCount: milestones?.length,
+    milestones
+  });
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -47,8 +53,10 @@ export default function AdminProjects() {
             </div>
             {selectedProjectData && (
               <ProjectHeader 
-                project={selectedProjectData} 
+                project={selectedProjectData}
+                milestones={milestones || []}
                 onProjectUpdated={refetchProjects}
+                onMilestoneUpdated={refetchMilestones}
               />
             )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
