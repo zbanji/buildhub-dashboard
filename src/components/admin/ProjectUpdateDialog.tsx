@@ -31,16 +31,25 @@ export function ProjectUpdateDialog({
   const [selectedMilestone, setSelectedMilestone] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
 
-  // Reset form state when dialog opens
   useEffect(() => {
     if (open) {
       setStatus(currentStatus);
-      if (milestones.length > 0) {
-        setSelectedMilestone(milestones[0].id);
-        setProgress(milestones[0].progress || 0);
+      if (milestones && milestones.length > 0) {
+        const firstMilestone = milestones[0];
+        setSelectedMilestone(firstMilestone.id);
+        setProgress(firstMilestone.progress || 0);
       }
     }
   }, [open, currentStatus, milestones]);
+
+  useEffect(() => {
+    if (selectedMilestone) {
+      const milestone = milestones.find(m => m.id === selectedMilestone);
+      if (milestone) {
+        setProgress(milestone.progress || 0);
+      }
+    }
+  }, [selectedMilestone, milestones]);
 
   const handleProjectStatusUpdate = async () => {
     const { error: projectError } = await supabase
