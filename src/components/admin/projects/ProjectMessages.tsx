@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,33 +45,40 @@ export function ProjectMessages({ selectedProject, messages, onMessageSent }: Pr
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {!selectedProject ? (
-        <p className="text-muted-foreground text-center py-4">
-          Select a project to view messages
-        </p>
-      ) : (
-        <>
-          <div className="flex-1 min-h-0">
-            <MessageList messages={messages} />
-          </div>
-          <div className="mt-4 space-y-2">
-            <Textarea
-              placeholder="Type your message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              className="min-h-[80px] resize-none"
-            />
-            <Button 
-              className="w-full" 
-              onClick={sendMessage}
-              disabled={!selectedProject || !newMessage.trim()}
-            >
-              Send Message
-            </Button>
-          </div>
-        </>
-      )}
-    </div>
+    <Card className="h-full flex flex-col bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-lg">
+      <CardHeader className="bg-gradient-to-r from-purple-100/50 to-blue-100/50">
+        <CardTitle className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+          Project Messages
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col space-y-4 p-4">
+        {!selectedProject ? (
+          <p className="text-muted-foreground text-center py-4">
+            Select a project to view messages
+          </p>
+        ) : (
+          <>
+            <div className="flex-1 min-h-0">
+              <MessageList messages={messages} />
+            </div>
+            <div className="space-y-2">
+              <Textarea
+                placeholder="Type your message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                className="min-h-[80px] resize-none"
+              />
+              <Button 
+                className="w-full" 
+                onClick={sendMessage}
+                disabled={!selectedProject || !newMessage.trim()}
+              >
+                Send Message
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
