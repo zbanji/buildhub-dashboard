@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type ProjectStatus = "planning" | "in_progress" | "review" | "completed";
 
@@ -24,9 +25,7 @@ export function ProjectUpdateDialog({ projectId, milestones = [], onUpdate }: Pr
   const [selectedMilestone, setSelectedMilestone] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
 
-  const handleSubmit = async () => {
-    if (!status || !selectedMilestone) return;
-
+  const handleProjectStatusUpdate = async () => {
     const { error: projectError } = await supabase
       .from('projects')
       .update({ status })
@@ -36,6 +35,24 @@ export function ProjectUpdateDialog({ projectId, milestones = [], onUpdate }: Pr
       toast({
         title: "Error",
         description: "Failed to update project status",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "Project status updated successfully",
+    });
+
+    onUpdate();
+  };
+
+  const handleMilestoneUpdate = async () => {
+    if (!selectedMilestone) {
+      toast({
+        title: "Error",
+        description: "Please select a milestone",
         variant: "destructive",
       });
       return;
@@ -57,11 +74,10 @@ export function ProjectUpdateDialog({ projectId, milestones = [], onUpdate }: Pr
 
     toast({
       title: "Success",
-      description: "Project status updated successfully",
+      description: "Milestone progress updated successfully",
     });
 
     onUpdate();
-    setOpen(false);
   };
 
   return (
@@ -71,57 +87,77 @@ export function ProjectUpdateDialog({ projectId, milestones = [], onUpdate }: Pr
           Update Status
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Update Project Status</DialogTitle>
+          <DialogTitle className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+            Update Project Status
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Project Status</Label>
-            <Select value={status} onValueChange={(value: ProjectStatus) => setStatus(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="planning">Planning</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="review">Review</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-6 py-4">
+          <Card className="overflow-hidden bg-gradient-to-br from-white to-purple-50 border border-purple-100 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-purple-100/50 to-blue-100/50">
+              <CardTitle className="text-base">Project Status</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Project Status</Label>
+                <Select value={status} onValueChange={(value: ProjectStatus) => setStatus(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planning">Planning</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="review">Review</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleProjectStatusUpdate} className="w-full">
+                Update Project Status
+              </Button>
+            </CardContent>
+          </Card>
 
-          <div className="space-y-2">
-            <Label>Update Milestone Progress</Label>
-            <Select value={selectedMilestone} onValueChange={setSelectedMilestone}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select milestone" />
-              </SelectTrigger>
-              <SelectContent>
-                {milestones.map((milestone) => (
-                  <SelectItem key={milestone.id} value={milestone.id}>
-                    {milestone.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Card className="overflow-hidden bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-purple-100/50 to-blue-100/50">
+              <CardTitle className="text-base">Milestone Progress</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Select Milestone</Label>
+                <Select value={selectedMilestone} onValueChange={setSelectedMilestone}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select milestone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {milestones.map((milestone) => (
+                      <SelectItem key={milestone.id} value={milestone.id}>
+                        {milestone.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {selectedMilestone && (
-            <div className="space-y-2">
-              <Label>Progress: {progress}%</Label>
-              <Slider
-                value={[progress]}
-                onValueChange={([value]) => setProgress(value)}
-                max={100}
-                step={1}
-              />
-            </div>
-          )}
+              {selectedMilestone && (
+                <div className="space-y-2">
+                  <Label>Progress: {progress}%</Label>
+                  <Slider
+                    value={[progress]}
+                    onValueChange={([value]) => setProgress(value)}
+                    max={100}
+                    step={1}
+                    className="my-4"
+                  />
+                </div>
+              )}
 
-          <Button onClick={handleSubmit} className="w-full">
-            Update Project
-          </Button>
+              <Button onClick={handleMilestoneUpdate} className="w-full">
+                Update Milestone Progress
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </DialogContent>
     </Dialog>
