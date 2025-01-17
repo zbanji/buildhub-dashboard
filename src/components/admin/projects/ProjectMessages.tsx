@@ -45,7 +45,7 @@ export function ProjectMessages({ selectedProject, messages, onMessageSent }: Pr
   };
 
   return (
-    <Card className="h-full flex flex-col bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-lg">
+    <div className="h-full flex flex-col">
       <CardHeader className="bg-gradient-to-r from-purple-100/50 to-blue-100/50">
         <CardTitle className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
           Project Messages
@@ -79,6 +79,6 @@ export function ProjectMessages({ selectedProject, messages, onMessageSent }: Pr
           </>
         )}
       </CardContent>
-    </Card>
+    </div>
   );
 }
