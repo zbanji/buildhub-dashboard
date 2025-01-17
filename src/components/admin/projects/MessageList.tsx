@@ -19,7 +19,7 @@ export function MessageList({ messages }: MessageListProps) {
   return (
     <div 
       ref={containerRef} 
-      className="h-full overflow-y-auto space-y-4 px-2 sm:px-4"
+      className="h-[300px] sm:h-[400px] overflow-y-auto space-y-4 px-2 sm:px-4"
     >
       {messages.map((message) => {
         const isAdmin = message.profiles?.role === 'admin';

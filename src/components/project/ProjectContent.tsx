@@ -5,7 +5,7 @@ import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 interface ProjectContentProps {
   projectId: string;
@@ -73,19 +73,12 @@ export function ProjectContent({
               milestoneName={selectedMilestoneDetails?.name}
             />
           </div>
-          <Card className="h-[600px] bg-gradient-to-br from-white to-blue-50 border border-blue-100">
-            <CardHeader className="bg-gradient-to-r from-purple-100/50 to-blue-100/50">
-              <CardTitle className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
-                Project Messages
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 h-[calc(100%-5rem)] flex flex-col">
-              <ProjectMessages
-                selectedProject={projectId}
-                messages={messages}
-                onMessageSent={onMessageSent}
-              />
-            </CardContent>
+          <Card className="h-[600px] bg-gradient-to-br from-white to-blue-50">
+            <ProjectMessages
+              selectedProject={projectId}
+              messages={messages}
+              onMessageSent={onMessageSent}
+            />
           </Card>
         </div>
       </div>
