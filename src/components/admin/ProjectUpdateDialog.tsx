@@ -29,24 +29,26 @@ export function ProjectUpdateDialog({
   const { toast } = useToast();
   const [status, setStatus] = useState<ProjectStatus>(currentStatus);
   const [selectedMilestone, setSelectedMilestone] = useState<string>("");
-  const [progress, setProgress] = useState<number>(0);
+  const [progress, setProgress] = useState<number[]>([0]);
 
+  // Reset form state when dialog opens
   useEffect(() => {
     if (open) {
       setStatus(currentStatus);
       if (milestones && milestones.length > 0) {
         const firstMilestone = milestones[0];
         setSelectedMilestone(firstMilestone.id);
-        setProgress(firstMilestone.progress || 0);
+        setProgress([firstMilestone.progress || 0]);
       }
     }
   }, [open, currentStatus, milestones]);
 
+  // Update progress when milestone selection changes
   useEffect(() => {
-    if (selectedMilestone) {
+    if (selectedMilestone && milestones) {
       const milestone = milestones.find(m => m.id === selectedMilestone);
       if (milestone) {
-        setProgress(milestone.progress || 0);
+        setProgress([milestone.progress || 0]);
       }
     }
   }, [selectedMilestone, milestones]);
@@ -87,7 +89,7 @@ export function ProjectUpdateDialog({
 
     const { error: milestoneError } = await supabase
       .from('project_milestones')
-      .update({ progress })
+      .update({ progress: progress[0] })
       .eq('id', selectedMilestone);
 
     if (milestoneError) {
@@ -170,10 +172,10 @@ export function ProjectUpdateDialog({
 
               {selectedMilestone && (
                 <div className="space-y-2">
-                  <Label>Progress: {progress}%</Label>
+                  <Label>Progress: {progress[0]}%</Label>
                   <Slider
-                    value={[progress]}
-                    onValueChange={([value]) => setProgress(value)}
+                    value={progress}
+                    onValueChange={setProgress}
                     max={100}
                     step={1}
                     className="my-4"
