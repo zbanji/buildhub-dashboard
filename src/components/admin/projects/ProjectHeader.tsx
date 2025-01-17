@@ -1,12 +1,13 @@
 import { Project, Milestone } from "@/types/project";
 import { EditProjectDialog } from "@/components/admin/EditProjectDialog";
 import { ProjectUpdateDialog } from "@/components/admin/ProjectUpdateDialog";
+import { QueryObserverResult, RefetchOptions } from "@tanstack/react-query";
 
 interface ProjectHeaderProps {
   project: Project;
   milestones: Milestone[];
   onProjectUpdated: () => void;
-  onMilestoneUpdated: () => void;
+  onMilestoneUpdated: (options?: RefetchOptions) => Promise<QueryObserverResult<Project[], Error>>;
 }
 
 export function ProjectHeader({ 
