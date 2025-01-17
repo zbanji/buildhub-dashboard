@@ -7,7 +7,7 @@ interface ProjectHeaderProps {
   project: Project;
   milestones: Milestone[];
   onProjectUpdated: () => void;
-  onMilestoneUpdated: (options?: RefetchOptions) => Promise<QueryObserverResult<Project[], Error>>;
+  onMilestoneUpdated: (options?: RefetchOptions) => Promise<QueryObserverResult<Milestone[], Error>>;
 }
 
 export function ProjectHeader({ 

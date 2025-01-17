@@ -16,7 +16,7 @@ export interface ProjectUpdateDialogProps {
   projectId: string;
   currentStatus: ProjectStatus;
   milestones?: Milestone[];
-  onUpdate: (options?: RefetchOptions) => Promise<QueryObserverResult<Project[], Error>>;
+  onUpdate: (options?: RefetchOptions) => Promise<QueryObserverResult<Milestone[], Error>>;
 }
 
 export function ProjectUpdateDialog({ 
