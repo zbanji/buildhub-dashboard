@@ -45,11 +45,13 @@ export function ProjectMessages({ selectedProject, messages, onMessageSent }: Pr
   };
 
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-4">
-        <CardTitle>Project Messages</CardTitle>
+    <Card className="h-full overflow-hidden bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-lg">
+      <CardHeader className="bg-gradient-to-r from-purple-100/50 to-blue-100/50">
+        <CardTitle className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+          Project Messages
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 p-4">
         {!selectedProject ? (
           <p className="text-muted-foreground text-center py-4">
             Select a project to view messages

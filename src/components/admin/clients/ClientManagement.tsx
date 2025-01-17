@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,7 +93,12 @@ export function ClientManagement() {
         <h1 className="text-3xl font-bold">Client Management</h1>
         <NewClientDialog />
       </div>
-      <Card>
+      <Card className="overflow-hidden bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-purple-100/50 to-blue-100/50">
+          <CardTitle className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+            Clients
+          </CardTitle>
+        </CardHeader>
         <CardContent className="pt-6">
           <div className="space-y-6">
             {clients.map((client) => (
