@@ -20,6 +20,7 @@ export function ProjectHeader({ project, onProjectUpdated }: ProjectHeaderProps)
         />
         <ProjectUpdateDialog
           projectId={project.id}
+          currentStatus={project.status}
           milestones={project.project_milestones || []}
           onUpdate={onProjectUpdated}
         />
