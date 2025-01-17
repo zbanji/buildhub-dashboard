@@ -31,18 +31,35 @@ export function ProjectUpdateDialog({
   const [selectedMilestone, setSelectedMilestone] = useState<string>("");
   const [progress, setProgress] = useState<number[]>([0]);
 
+  useEffect(() => {
+    console.log('ProjectUpdateDialog mounted with:', {
+      projectId,
+      currentStatus,
+      milestonesCount: milestones?.length,
+      milestones
+    });
+  }, [projectId, currentStatus, milestones]);
+
   // Reset form state when dialog opens
   useEffect(() => {
-    if (open && milestones && milestones.length > 0) {
+    if (open) {
+      console.log('Dialog opened, setting initial state with milestones:', milestones);
       setStatus(currentStatus);
-      setSelectedMilestone(milestones[0].id);
-      setProgress([milestones[0].progress || 0]);
+      if (milestones && milestones.length > 0) {
+        setSelectedMilestone(milestones[0].id);
+        setProgress([milestones[0].progress || 0]);
+      }
     }
   }, [open, currentStatus, milestones]);
 
   // Update progress when milestone selection changes
   useEffect(() => {
-    const selectedMilestoneData = milestones.find(m => m.id === selectedMilestone);
+    const selectedMilestoneData = milestones?.find(m => m.id === selectedMilestone);
+    console.log('Selected milestone changed:', {
+      selectedMilestone,
+      selectedMilestoneData,
+      availableMilestones: milestones
+    });
     if (selectedMilestoneData) {
       setProgress([selectedMilestoneData.progress || 0]);
     }
@@ -109,8 +126,6 @@ export function ProjectUpdateDialog({
     }
   };
 
-  console.log('Current milestones:', milestones); // Debug log
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -166,7 +181,7 @@ export function ProjectUpdateDialog({
                     <SelectValue placeholder={!milestones || milestones.length === 0 ? "No milestones available" : "Select milestone"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {milestones && milestones.map((milestone) => (
+                    {milestones?.map((milestone) => (
                       <SelectItem key={milestone.id} value={milestone.id}>
                         {milestone.name}
                       </SelectItem>
