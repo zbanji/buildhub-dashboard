@@ -8,7 +8,7 @@ import { UploadMediaButton } from "@/components/admin/projects/UploadMediaButton
 import { ClientManagement } from "@/components/admin/clients/ClientManagement";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, FolderKanban } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AdminProjects() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
@@ -22,18 +22,24 @@ export default function AdminProjects() {
     <Layout>
       <div className="space-y-8">
         <Tabs defaultValue="projects" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="projects" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 mb-8 bg-gradient-to-r from-purple-50 to-blue-50 p-1 rounded-lg">
+            <TabsTrigger 
+              value="projects" 
+              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all"
+            >
               <FolderKanban className="h-4 w-4" />
               Projects
             </TabsTrigger>
-            <TabsTrigger value="clients" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="clients" 
+              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all"
+            >
               <Users className="h-4 w-4" />
               Client Management
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="projects">
+          <TabsContent value="projects" className="animate-fade-in">
             {selectedProjectData && (
               <ProjectHeader 
                 project={selectedProjectData} 
@@ -52,29 +58,37 @@ export default function AdminProjects() {
               <div className="space-y-6">
                 {selectedProject && (
                   <>
-                    <div className="flex flex-col gap-4 p-4 border rounded-lg bg-card">
-                      <h3 className="text-lg font-semibold">Project Actions</h3>
-                      <div className="flex flex-col gap-2">
+                    <Card className="overflow-hidden bg-gradient-to-br from-white to-purple-50 border border-purple-100 shadow-lg">
+                      <CardHeader className="bg-gradient-to-r from-purple-100/50 to-blue-100/50">
+                        <CardTitle className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+                          Project Media
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4">
                         <div className="space-y-2">
                           <UploadMediaButton
                             projectId={selectedProject}
                             onUploadComplete={refetchMilestones}
                           />
                         </div>
-                      </div>
-                    </div>
-                    <ProjectMessages
-                      selectedProject={selectedProject}
-                      messages={messages || []}
-                      onMessageSent={refetchMessages}
-                    />
+                      </CardContent>
+                    </Card>
+                    <Card className="overflow-hidden bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-lg">
+                      <CardContent className="p-4">
+                        <ProjectMessages
+                          selectedProject={selectedProject}
+                          messages={messages || []}
+                          onMessageSent={refetchMessages}
+                        />
+                      </CardContent>
+                    </Card>
                   </>
                 )}
               </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="clients">
+          <TabsContent value="clients" className="animate-fade-in">
             <ClientManagement />
           </TabsContent>
         </Tabs>

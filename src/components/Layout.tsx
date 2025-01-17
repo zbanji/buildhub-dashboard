@@ -12,10 +12,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     try {
-      // Clean up session data first
       await cleanupSession();
-      
-      // Then redirect and show success message
       navigate(userRole === 'admin' ? '/admin/login' : '/client/login');
       toast({
         title: "Success",
@@ -28,15 +25,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-      // Still attempt to redirect on error
       navigate(userRole === 'admin' ? '/admin/login' : '/client/login');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
       <Header user={user} userName={userName} onSignOut={handleSignOut} />
-      <main className="max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8">{children}</main>
+      <main className="max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
+        {children}
+      </main>
     </div>
   );
 }
