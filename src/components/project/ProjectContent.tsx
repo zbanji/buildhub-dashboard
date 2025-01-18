@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { MilestoneCard } from "@/components/project/MilestoneCard";
 import { MediaGallery } from "@/components/project/MediaGallery";
-import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
+import { ClientProjectMessages } from "@/components/project/ClientProjectMessages";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -80,7 +80,7 @@ export function ProjectContent({
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 h-[calc(100%-5rem)] flex flex-col">
-              <ProjectMessages
+              <ClientProjectMessages
                 selectedProject={projectId}
                 messages={messages}
                 onMessageSent={onMessageSent}

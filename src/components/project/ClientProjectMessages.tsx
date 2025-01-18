@@ -3,16 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Message } from "@/hooks/use-project-data";
-import { MessageList } from "./MessageList";
+import { Message } from "@/types/project";
+import { MessageList } from "@/components/admin/projects/MessageList";
 
-interface ProjectMessagesProps {
+interface ClientProjectMessagesProps {
   selectedProject: string | null;
   messages: Message[];
   onMessageSent: () => void;
 }
 
-export function ProjectMessages({ selectedProject, messages, onMessageSent }: ProjectMessagesProps) {
+export function ClientProjectMessages({ selectedProject, messages, onMessageSent }: ClientProjectMessagesProps) {
   const [newMessage, setNewMessage] = useState("");
   const { toast } = useToast();
 

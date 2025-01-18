@@ -3,7 +3,7 @@ import { Layout } from "@/components/Layout";
 import { ProjectList } from "@/components/admin/projects/ProjectList";
 import { ProjectHeader } from "@/components/admin/projects/ProjectHeader";
 import { useProjects, useProjectMessages, useProjectMilestones } from "@/hooks/use-project-data";
-import { ProjectMessages } from "@/components/admin/projects/ProjectMessages";
+import { AdminProjectMessages } from "@/components/admin/projects/AdminProjectMessages";
 import { UploadMediaButton } from "@/components/admin/projects/UploadMediaButton";
 import { ClientManagement } from "@/components/admin/clients/ClientManagement";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -86,15 +86,11 @@ export default function AdminProjects() {
                         </div>
                       </CardContent>
                     </Card>
-                    <Card className="overflow-hidden bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-lg">
-                      <CardContent className="p-4">
-                        <ProjectMessages
-                          selectedProject={selectedProject}
-                          messages={messages || []}
-                          onMessageSent={refetchMessages}
-                        />
-                      </CardContent>
-                    </Card>
+                    <AdminProjectMessages
+                      selectedProject={selectedProject}
+                      messages={messages || []}
+                      onMessageSent={refetchMessages}
+                    />
                   </>
                 )}
               </div>
