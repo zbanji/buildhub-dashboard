@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Message } from "@/hooks/use-project-data";
 import { MessageList } from "./MessageList";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 interface ProjectMessagesProps {
   selectedProject: string | null;
@@ -44,33 +45,38 @@ export function ProjectMessages({ selectedProject, messages, onMessageSent }: Pr
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {!selectedProject ? (
-        <p className="text-muted-foreground text-center py-4">
-          Select a project to view messages
-        </p>
-      ) : (
-        <>
-          <div className="flex-1 min-h-0">
-            <MessageList messages={messages} />
-          </div>
-          <div className="mt-4 space-y-2">
-            <Textarea
-              placeholder="Type your message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              className="min-h-[80px] resize-none"
-            />
-            <Button 
-              className="w-full" 
-              onClick={sendMessage}
-              disabled={!selectedProject || !newMessage.trim()}
-            >
-              Send Message
-            </Button>
-          </div>
-        </>
-      )}
-    </div>
+    <Card className="flex flex-col h-full">
+      <CardHeader>
+        <CardTitle>Project Messages</CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 space-y-4">
+        {!selectedProject ? (
+          <p className="text-muted-foreground text-center py-4">
+            Select a project to view messages
+          </p>
+        ) : (
+          <>
+            <div className="flex-1 min-h-0">
+              <MessageList messages={messages} />
+            </div>
+            <div className="mt-4 space-y-2">
+              <Textarea
+                placeholder="Type your message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                className="min-h-[80px] resize-none"
+              />
+              <Button 
+                className="w-full" 
+                onClick={sendMessage}
+                disabled={!selectedProject || !newMessage.trim()}
+              >
+                Send Message
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
