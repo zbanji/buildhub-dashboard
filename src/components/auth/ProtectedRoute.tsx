@@ -20,7 +20,6 @@ export function ProtectedRoute({ children, allowedRole }: ProtectedRouteProps) {
   }
 
   if (!isAuthorized) {
-    // Store the attempted location for potential redirect after login
     return <Navigate to={`/${allowedRole}/login`} state={{ from: location }} replace />;
   }
 
