@@ -24,6 +24,7 @@ export function MilestoneCard({ milestones, selectedMilestone, onMilestoneSelect
         <CardTitle className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
           Project Milestones
         </CardTitle>
+        <p className="text-sm text-muted-foreground">Click a milestone to view its media</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-8">
@@ -41,6 +42,9 @@ export function MilestoneCard({ milestones, selectedMilestone, onMilestoneSelect
                 <div className="flex justify-between items-center">
                   <div className="flex-1">
                     <h3 className="font-medium">{milestone.name}</h3>
+                    <span className="text-sm text-muted-foreground">
+                      {milestone.status}
+                    </span>
                   </div>
                   <ChevronRight className={`h-5 w-5 transition-transform duration-200 ${
                     selectedMilestone === milestone.id ? 'rotate-90' : ''
