@@ -1,40 +1,45 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import AdminProjects from "./pages/admin/Projects";
-import AdminLogin from "./pages/auth/AdminLogin";
-import ClientLogin from "./pages/auth/ClientLogin";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ClientLogin } from "./pages/auth/ClientLogin";
+import { AdminLogin } from "./pages/auth/AdminLogin";
+import { ResetPassword } from "./pages/auth/ResetPassword";
+import { ClientDashboard } from "./pages/client/ClientDashboard";
+import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { AdminProjects } from "./pages/admin/AdminProjects";
+import { AdminProjectDetails } from "./pages/admin/AdminProjectDetails";
+import { AdminProjectCreate } from "./pages/admin/AdminProjectCreate";
+import { AdminProjectEdit } from "./pages/admin/AdminProjectEdit";
+import { ClientProjectDetails } from "./pages/client/ClientProjectDetails";
+import { ClientProjectEdit } from "./pages/client/ClientProjectEdit";
+import { AdminLayout } from "./components/layouts/AdminLayout";
+import { ClientLayout } from "./components/layouts/ClientLayout";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
-const queryClient = new QueryClient();
-
-const App = () => {
+export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route
-              path="/admin/projects"
-              element={
-                <ProtectedRoute allowedRole="admin">
-                  <AdminProjects />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/client/login" element={<ClientLogin />} />
-          </Routes>
-        </TooltipProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
-  );
-};
+    <Router>
+      <Routes>
+        <Route path="/client/login" element={<ClientLogin />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        
+        <Route path="/admin" element={<ProtectedRoute expectedRole="admin" />}>
+          <Route element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="projects" element={<AdminProjects />} />
+            <Route path="projects/create" element={<AdminProjectCreate />} />
+            <Route path="projects/:id" element={<AdminProjectDetails />} />
+            <Route path="projects/:id/edit" element={<AdminProjectEdit />} />
+          </Route>
+        </Route>
 
-export default App;
+        <Route path="/" element={<ProtectedRoute expectedRole="client" />}>
+          <Route element={<ClientLayout />}>
+            <Route index element={<ClientDashboard />} />
+            <Route path="projects/:id" element={<ClientProjectDetails />} />
+            <Route path="projects/:id/edit" element={<ClientProjectEdit />} />
+          </Route>
+        </Route>
+      </Routes>
+    </Router>
+  );
+}

@@ -24,7 +24,7 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
   const productionUrl = "https://buildhub-dashboard.lovable.app";
   const previewUrl = "https://preview--buildhub-dashboard.lovable.app";
   const baseUrl = process.env.NODE_ENV === "production" ? productionUrl : window.location.origin;
-  const redirectUrl = `${baseUrl}/client/login?type=recovery`;
+  const redirectUrl = `${baseUrl}/reset-password`;
 
   useEffect(() => {
     console.log("Setting up auth state change listener");
@@ -90,6 +90,7 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
       }
     });
 
+    // Check if we're on the reset password page
     const type = searchParams.get("type");
     if (type === "recovery") {
       setView("update_password");
@@ -180,7 +181,7 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
           }
         }}
         providers={[]}
-        redirectTo={baseUrl}
+        redirectTo={redirectUrl}
         showLinks={showForgotPassword}
         localization={{
           variables: {
@@ -207,9 +208,6 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
               confirmation_text: 'Your password has been updated successfully',
             },
           },
-        }}
-        queryParams={{
-          password_reset_redirect_to: redirectUrl,
         }}
         magicLink={false}
         socialLayout="horizontal"
