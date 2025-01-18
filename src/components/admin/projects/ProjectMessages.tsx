@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Message } from "@/hooks/use-project-data";
 import { MessageList } from "./MessageList";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ProjectMessagesProps {
   selectedProject: string | null;
@@ -51,24 +52,29 @@ export function ProjectMessages({ selectedProject, messages, onMessageSent }: Pr
         </p>
       ) : (
         <>
-          <div className="flex-1 min-h-0">
-            <MessageList messages={messages} />
-          </div>
-          <div className="mt-4 space-y-2">
-            <Textarea
-              placeholder="Type your message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              className="min-h-[80px] resize-none"
-            />
-            <Button 
-              className="w-full" 
-              onClick={sendMessage}
-              disabled={!selectedProject || !newMessage.trim()}
-            >
-              Send Message
-            </Button>
-          </div>
+          <CardHeader>
+            <CardTitle>Project Messages</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0">
+              <MessageList messages={messages} />
+            </div>
+            <div className="mt-4 space-y-2">
+              <Textarea
+                placeholder="Type your message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                className="min-h-[80px] resize-none"
+              />
+              <Button 
+                className="w-full" 
+                onClick={sendMessage}
+                disabled={!selectedProject || !newMessage.trim()}
+              >
+                Send Message
+              </Button>
+            </div>
+          </CardContent>
         </>
       )}
     </div>
