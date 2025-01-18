@@ -177,7 +177,7 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
           }
         }}
         providers={[]}
-        redirectTo={resetPasswordRedirectTo}
+        redirectTo={baseUrl}
         showLinks={showForgotPassword}
         localization={{
           variables: {
