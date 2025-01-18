@@ -20,8 +20,11 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
   const { message, error, setError } = useAuthMessages(propError);
   
-  const baseUrl = window.location.origin;
-  const resetPasswordRedirectTo = `${baseUrl}/client/login?type=recovery`;
+  // Use hardcoded URLs for deployment
+  const productionUrl = "https://buildhub-dashboard.lovable.app";
+  const previewUrl = "https://preview--buildhub-dashboard.lovable.app";
+  const baseUrl = process.env.NODE_ENV === "production" ? productionUrl : window.location.origin;
+  const redirectUrl = `${baseUrl}/client/login?type=recovery`;
 
   useEffect(() => {
     console.log("Setting up auth state change listener");
@@ -206,7 +209,7 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
           },
         }}
         queryParams={{
-          password_reset_redirect_to: resetPasswordRedirectTo,
+          password_reset_redirect_to: redirectUrl,
         }}
         magicLink={false}
         socialLayout="horizontal"
