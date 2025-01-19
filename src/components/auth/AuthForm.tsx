@@ -20,15 +20,15 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
   const { message, error, setError } = useAuthMessages(propError);
   
-  // Use environment-aware URL construction
-  const productionUrl = "https://buildhub-dashboard.lovable.app";
-  const previewUrl = "https://preview--buildhub-dashboard.lovable.app";
-  const baseUrl = process.env.NODE_ENV === "production" ? productionUrl : window.location.origin;
-  const redirectUrl = `${baseUrl}/client/login?type=recovery`;
+  // Construct redirect URL based on environment
+  const baseUrl = window.location.origin;
+  const redirectPath = "/client/login?type=recovery";
+  const redirectUrl = `${baseUrl}${redirectPath}`;
 
   useEffect(() => {
     console.log("Setting up auth state change listener");
     console.log("Current URL parameters:", Object.fromEntries(searchParams.entries()));
+    console.log("Configured redirect URL:", redirectUrl);
     
     const handleSessionError = async (error: any) => {
       console.error("Session error:", error);
@@ -113,7 +113,7 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
       console.log("Cleaning up auth state change listener");
       subscription.unsubscribe();
     };
-  }, [searchParams, setError, navigate]);
+  }, [searchParams, setError, navigate, redirectUrl]);
 
   const handleAuthError = (error: any) => {
     console.error("Auth error details:", {
