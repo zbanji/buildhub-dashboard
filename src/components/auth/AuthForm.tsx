@@ -20,7 +20,6 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
   const { message, error, setError } = useAuthMessages(propError);
   
-  // Construct redirect URL based on environment
   const baseUrl = window.location.origin;
   const redirectPath = "/client/login?type=recovery";
   const redirectUrl = `${baseUrl}${redirectPath}`;
@@ -56,7 +55,7 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
             if (!isRefreshTokenError) {
               handleAuthError(sessionError);
             }
-          } else if (currentSession) {
+          } else if (currentSession && view !== "update_password") {
             navigate('/');
           }
         } catch (err) {
@@ -64,7 +63,8 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
           setError("Failed to update user. Please try again.");
         }
       } else if (event === 'SIGNED_IN') {
-        if (session) {
+        // Only navigate if we're not in password reset mode
+        if (session && view !== "update_password") {
           try {
             console.log("Fetching user profile for ID:", session.user.id);
             const { data: profile, error: profileError } = await supabase
@@ -113,7 +113,7 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
       console.log("Cleaning up auth state change listener");
       subscription.unsubscribe();
     };
-  }, [searchParams, setError, navigate, redirectUrl]);
+  }, [searchParams, setError, navigate, redirectUrl, view]);
 
   const handleAuthError = (error: any) => {
     console.error("Auth error details:", {
