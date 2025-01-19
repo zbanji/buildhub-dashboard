@@ -30,6 +30,18 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
     console.log("Setting up auth state change listener");
     console.log("Current URL parameters:", Object.fromEntries(searchParams.entries()));
     
+    const handleSessionError = async (error: any) => {
+      console.error("Session error:", error);
+      if (error.message.includes('refresh_token_not_found')) {
+        console.log("Invalid refresh token detected, cleaning up session");
+        await cleanupSession();
+        setError("Your session has expired. Please sign in again.");
+        setView("sign_in");
+        return true;
+      }
+      return false;
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
       
@@ -40,13 +52,10 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
         try {
           const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
           if (sessionError) {
-            if (sessionError.message.includes('refresh_token_not_found')) {
-              console.log("Invalid refresh token, cleaning up session");
-              await cleanupSession();
-              setError("Your session has expired. Please sign in again.");
-              return;
+            const isRefreshTokenError = await handleSessionError(sessionError);
+            if (!isRefreshTokenError) {
+              handleAuthError(sessionError);
             }
-            handleAuthError(sessionError);
           } else if (currentSession) {
             navigate('/');
           }
