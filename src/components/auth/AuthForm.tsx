@@ -20,7 +20,7 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
   const { message, error, setError } = useAuthMessages(propError);
   
-  // Use hardcoded URLs for deployment
+  // Use environment-aware URL construction
   const productionUrl = "https://buildhub-dashboard.lovable.app";
   const previewUrl = "https://preview--buildhub-dashboard.lovable.app";
   const baseUrl = process.env.NODE_ENV === "production" ? productionUrl : window.location.origin;
@@ -28,10 +28,13 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
 
   useEffect(() => {
     console.log("Setting up auth state change listener");
+    console.log("Current URL parameters:", Object.fromEntries(searchParams.entries()));
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
       
       if (event === 'PASSWORD_RECOVERY') {
+        console.log("Password recovery mode detected");
         setView("update_password");
       } else if (event === 'USER_UPDATED') {
         try {
@@ -90,8 +93,10 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
       }
     });
 
+    // Check for recovery mode from URL parameters
     const type = searchParams.get("type");
     if (type === "recovery") {
+      console.log("Recovery mode detected from URL parameters");
       setView("update_password");
     }
 
@@ -180,7 +185,7 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
           }
         }}
         providers={[]}
-        redirectTo={baseUrl}
+        redirectTo={redirectUrl}
         showLinks={showForgotPassword}
         localization={{
           variables: {
