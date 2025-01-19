@@ -20,10 +20,10 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
   const { message, error, setError } = useAuthMessages(propError);
   
-  // Construct redirect URL based on environment
+  // Construct redirect URL with explicit recovery path
   const baseUrl = window.location.origin;
-  const redirectPath = "/client/login?type=recovery";
-  const redirectUrl = `${baseUrl}${redirectPath}`;
+  const recoveryPath = "/client/login?type=recovery";
+  const redirectUrl = `${baseUrl}${recoveryPath}`;
 
   useEffect(() => {
     console.log("Setting up auth state change listener");
@@ -223,7 +223,7 @@ export function AuthForm({ title, error: propError, showForgotPassword = true }:
           },
         }}
         queryParams={{
-          password_reset_redirect_to: redirectUrl,
+          password_reset_redirect_to: `${baseUrl}/client/login?type=recovery`,
         }}
         magicLink={false}
         socialLayout="horizontal"
