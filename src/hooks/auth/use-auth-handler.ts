@@ -12,6 +12,7 @@ export function useAuthHandler(
   const navigate = useNavigate();
   const [view, setView] = useState<AuthView>("sign_in");
   const [passwordUpdated, setPasswordUpdated] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
   useEffect(() => {
     // Set initial view based on URL parameter
@@ -19,6 +20,7 @@ export function useAuthHandler(
     const type = params.get("type");
     
     if (type === "recovery") {
+      setIsRecoveryMode(true);
       setView("update_password");
     }
 
@@ -39,6 +41,7 @@ export function useAuthHandler(
       
       if (event === 'PASSWORD_RECOVERY') {
         console.log("Password recovery mode detected");
+        setIsRecoveryMode(true);
         setView("update_password");
       } else if (event === 'USER_UPDATED') {
         try {
@@ -57,35 +60,37 @@ export function useAuthHandler(
           setError("Failed to update user. Please try again.");
         }
       } else if (event === 'SIGNED_IN') {
-        // Only navigate if we're not in password reset mode
-        if (session && view !== ("update_password" as AuthView)) {
-          try {
-            console.log("Fetching user profile for ID:", session.user.id);
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .maybeSingle();
+        if (!session) return;
+        
+        // Don't navigate if we're in recovery mode
+        if (isRecoveryMode) {
+          console.log("Preventing navigation during password recovery");
+          return;
+        }
 
-            if (profileError) {
-              console.error("Error fetching profile:", profileError);
-              throw profileError;
-            }
+        try {
+          console.log("Fetching user profile for ID:", session.user.id);
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .maybeSingle();
 
-            // Only navigate if we're not in password reset mode OR password has been updated
-            if (view !== ("update_password" as AuthView) || passwordUpdated) {
-              console.log("Profile fetched successfully:", profile);
-              if (profile?.role === 'admin') {
-                navigate('/admin/projects');
-              } else {
-                navigate('/');
-              }
-            }
-          } catch (err) {
-            console.error("Error during sign in:", err);
-            setError("Failed to complete sign in. Please try again.");
-            await cleanupSession();
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            throw profileError;
           }
+
+          console.log("Profile fetched successfully:", profile);
+          if (profile?.role === 'admin') {
+            navigate('/admin/projects');
+          } else {
+            navigate('/');
+          }
+        } catch (err) {
+          console.error("Error during sign in:", err);
+          setError("Failed to complete sign in. Please try again.");
+          await cleanupSession();
         }
       } else if (event === 'SIGNED_OUT') {
         try {
@@ -96,6 +101,7 @@ export function useAuthHandler(
           setError("");
           setView("sign_in");
           setPasswordUpdated(false);
+          setIsRecoveryMode(false);
         }
       }
     });
@@ -104,7 +110,7 @@ export function useAuthHandler(
       console.log("Cleaning up auth state change listener");
       subscription.unsubscribe();
     };
-  }, [navigate, setError, view, passwordUpdated]);
+  }, [navigate, setError]);
 
   return { view, setView };
 }
