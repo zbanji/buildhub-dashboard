@@ -16,7 +16,6 @@ export function useAuthHandler(
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const { toast } = useToast();
 
-  // Handle URL parameters
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const type = params.get("type");
@@ -24,12 +23,10 @@ export function useAuthHandler(
     if (type === "recovery") {
       setIsRecoveryMode(true);
       setView("update_password");
-      // Clear any existing session when entering recovery mode
       cleanupSession();
     }
   }, []);
 
-  // Handle session errors
   const handleSessionError = async (error: any) => {
     console.error("Session error:", error);
     if (error.message.includes('refresh_token_not_found')) {
@@ -42,7 +39,6 @@ export function useAuthHandler(
     return false;
   };
 
-  // Handle profile fetch with retry
   const fetchProfile = async (userId: string, retryCount = 3): Promise<any> => {
     try {
       const { data: profile, error } = await supabase
@@ -63,7 +59,6 @@ export function useAuthHandler(
     }
   };
 
-  // Handle auth state changes
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
@@ -73,7 +68,6 @@ export function useAuthHandler(
           console.log("Password recovery mode detected");
           setIsRecoveryMode(true);
           setView("update_password");
-          // Update profile to indicate password reset in progress
           if (session?.user.id) {
             await supabase
               .from('profiles')
@@ -83,37 +77,46 @@ export function useAuthHandler(
           break;
 
         case 'USER_UPDATED':
-          try {
-            const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError) {
-              const isRefreshTokenError = await handleSessionError(sessionError);
-              if (!isRefreshTokenError) {
-                setError(sessionError.message);
+          if (isRecoveryMode) {
+            try {
+              const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+              if (sessionError) {
+                const isRefreshTokenError = await handleSessionError(sessionError);
+                if (!isRefreshTokenError) {
+                  setError(sessionError.message);
+                }
+              } else if (currentSession) {
+                const profile = await fetchProfile(currentSession.user.id);
+                if (profile?.password_reset_in_progress) {
+                  await supabase
+                    .from('profiles')
+                    .update({ password_reset_in_progress: false })
+                    .eq('id', currentSession.user.id);
+                    
+                  setPasswordUpdated(true);
+                  toast({
+                    title: "Success",
+                    description: "Your password has been updated successfully. Please sign in with your new password.",
+                  });
+                  await cleanupSession();
+                  navigate('/client/login');
+                }
               }
-            } else if (currentSession) {
-              const profile = await fetchProfile(currentSession.user.id);
-              if (!profile?.password_reset_in_progress) {
-                setPasswordUpdated(true);
-                toast({
-                  title: "Success",
-                  description: "Your password has been updated successfully.",
-                });
-                navigate('/');
-              }
+            } catch (err) {
+              console.error("Error handling password update:", err);
+              setError("Failed to complete password update. Please try again.");
             }
-          } catch (err) {
-            console.error("Error getting session after update:", err);
-            setError("Failed to update user. Please try again.");
           }
           break;
 
         case 'SIGNED_IN':
-          if (!session || isRecoveryMode) {
-            console.log("Preventing navigation during password recovery");
+          if (isRecoveryMode || passwordUpdated) {
+            console.log("Preventing navigation during password recovery/update");
             return;
           }
 
           try {
+            if (!session) return;
             console.log("Fetching user profile for ID:", session.user.id);
             const profile = await fetchProfile(session.user.id);
 
@@ -158,7 +161,7 @@ export function useAuthHandler(
       console.log("Cleaning up auth state change listener");
       subscription.unsubscribe();
     };
-  }, [navigate, setError, isRecoveryMode, toast]); 
+  }, [navigate, setError, isRecoveryMode, passwordUpdated, toast]); 
 
   return { view, setView };
 }

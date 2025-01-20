@@ -11,6 +11,7 @@ export function PasswordForm({ onSubmit, isLoading }: PasswordFormProps) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const isRecoveryMode = new URLSearchParams(window.location.search).get('type') === 'recovery';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,18 +20,20 @@ export function PasswordForm({ onSubmit, isLoading }: PasswordFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="currentPassword" className="text-sm font-medium">
-          Current Password
-        </label>
-        <Input
-          id="currentPassword"
-          type="password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          required
-        />
-      </div>
+      {!isRecoveryMode && (
+        <div className="space-y-2">
+          <label htmlFor="currentPassword" className="text-sm font-medium">
+            Current Password
+          </label>
+          <Input
+            id="currentPassword"
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required={!isRecoveryMode}
+          />
+        </div>
+      )}
       <div className="space-y-2">
         <label htmlFor="newPassword" className="text-sm font-medium">
           New Password
