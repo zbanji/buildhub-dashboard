@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanupSession } from "@/utils/auth-cleanup";
 
+type AuthView = "sign_in" | "update_password";
+
 export function useAuthHandler(
   setError: (error: string) => void,
   redirectUrl: string
 ) {
   const navigate = useNavigate();
-  const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
+  const [view, setView] = useState<AuthView>("sign_in");
   const [passwordUpdated, setPasswordUpdated] = useState(false);
 
   useEffect(() => {
@@ -56,7 +58,7 @@ export function useAuthHandler(
         }
       } else if (event === 'SIGNED_IN') {
         // Only navigate if we're not in password reset mode
-        if (session && view !== "update_password") {
+        if (session && view !== ("update_password" as AuthView)) {
           try {
             console.log("Fetching user profile for ID:", session.user.id);
             const { data: profile, error: profileError } = await supabase
@@ -71,7 +73,7 @@ export function useAuthHandler(
             }
 
             // Only navigate if we're not in password reset mode OR password has been updated
-            if (view !== "update_password" || passwordUpdated) {
+            if (view !== ("update_password" as AuthView) || passwordUpdated) {
               console.log("Profile fetched successfully:", profile);
               if (profile?.role === 'admin') {
                 navigate('/admin/projects');
