@@ -9,12 +9,13 @@ export function useAuthHandler(
 ) {
   const navigate = useNavigate();
   const [view, setView] = useState<"sign_in" | "update_password">("sign_in");
+  const [passwordUpdated, setPasswordUpdated] = useState(false);
 
   useEffect(() => {
+    // Set initial view based on URL parameter
     const params = new URLSearchParams(window.location.search);
     const type = params.get("type");
     
-    // Set view immediately if we're in recovery mode
     if (type === "recovery") {
       setView("update_password");
     }
@@ -45,8 +46,8 @@ export function useAuthHandler(
             if (!isRefreshTokenError) {
               setError(sessionError.message);
             }
-          } else if (currentSession && view === "update_password") {
-            // Only navigate after successful password update
+          } else if (currentSession) {
+            setPasswordUpdated(true);
             navigate('/');
           }
         } catch (err) {
@@ -69,11 +70,14 @@ export function useAuthHandler(
               throw profileError;
             }
 
-            console.log("Profile fetched successfully:", profile);
-            if (profile?.role === 'admin') {
-              navigate('/admin/projects');
-            } else {
-              navigate('/');
+            // Only navigate if we're not in password reset mode OR password has been updated
+            if (view !== "update_password" || passwordUpdated) {
+              console.log("Profile fetched successfully:", profile);
+              if (profile?.role === 'admin') {
+                navigate('/admin/projects');
+              } else {
+                navigate('/');
+              }
             }
           } catch (err) {
             console.error("Error during sign in:", err);
@@ -89,6 +93,7 @@ export function useAuthHandler(
         } finally {
           setError("");
           setView("sign_in");
+          setPasswordUpdated(false);
         }
       }
     });
@@ -97,7 +102,7 @@ export function useAuthHandler(
       console.log("Cleaning up auth state change listener");
       subscription.unsubscribe();
     };
-  }, [navigate, setError, view]);
+  }, [navigate, setError, view, passwordUpdated]);
 
   return { view, setView };
 }
