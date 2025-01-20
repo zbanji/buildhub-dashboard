@@ -54,6 +54,7 @@ export type Database = {
           email: string | null
           id: string
           name: string | null
+          password_reset_in_progress: boolean | null
           role: string | null
           updated_at: string | null
         }
@@ -62,6 +63,7 @@ export type Database = {
           email?: string | null
           id: string
           name?: string | null
+          password_reset_in_progress?: boolean | null
           role?: string | null
           updated_at?: string | null
         }
@@ -70,6 +72,7 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string | null
+          password_reset_in_progress?: boolean | null
           role?: string | null
           updated_at?: string | null
         }

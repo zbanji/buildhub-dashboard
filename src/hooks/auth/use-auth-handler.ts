@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanupSession } from "@/utils/auth-cleanup";
+import { useToast } from "@/hooks/use-toast";
 
 type AuthView = "sign_in" | "update_password";
 
@@ -13,6 +14,7 @@ export function useAuthHandler(
   const [view, setView] = useState<AuthView>("sign_in");
   const [passwordUpdated, setPasswordUpdated] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const { toast } = useToast();
 
   // Handle URL parameters
   useEffect(() => {
@@ -22,6 +24,8 @@ export function useAuthHandler(
     if (type === "recovery") {
       setIsRecoveryMode(true);
       setView("update_password");
+      // Clear any existing session when entering recovery mode
+      cleanupSession();
     }
   }, []);
 
@@ -38,6 +42,27 @@ export function useAuthHandler(
     return false;
   };
 
+  // Handle profile fetch with retry
+  const fetchProfile = async (userId: string, retryCount = 3): Promise<any> => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role, password_reset_in_progress')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!profile && retryCount > 0) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return fetchProfile(userId, retryCount - 1);
+      }
+      return profile;
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      throw error;
+    }
+  };
+
   // Handle auth state changes
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -48,6 +73,13 @@ export function useAuthHandler(
           console.log("Password recovery mode detected");
           setIsRecoveryMode(true);
           setView("update_password");
+          // Update profile to indicate password reset in progress
+          if (session?.user.id) {
+            await supabase
+              .from('profiles')
+              .update({ password_reset_in_progress: true })
+              .eq('id', session.user.id);
+          }
           break;
 
         case 'USER_UPDATED':
@@ -59,8 +91,15 @@ export function useAuthHandler(
                 setError(sessionError.message);
               }
             } else if (currentSession) {
-              setPasswordUpdated(true);
-              navigate('/');
+              const profile = await fetchProfile(currentSession.user.id);
+              if (!profile?.password_reset_in_progress) {
+                setPasswordUpdated(true);
+                toast({
+                  title: "Success",
+                  description: "Your password has been updated successfully.",
+                });
+                navigate('/');
+              }
             }
           } catch (err) {
             console.error("Error getting session after update:", err);
@@ -76,15 +115,15 @@ export function useAuthHandler(
 
           try {
             console.log("Fetching user profile for ID:", session.user.id);
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .maybeSingle();
+            const profile = await fetchProfile(session.user.id);
 
-            if (profileError) {
-              console.error("Error fetching profile:", profileError);
-              throw profileError;
+            if (!profile) {
+              throw new Error("Profile not found");
+            }
+
+            if (profile.password_reset_in_progress) {
+              console.log("Password reset in progress, preventing navigation");
+              return;
             }
 
             console.log("Profile fetched successfully:", profile);
@@ -119,7 +158,7 @@ export function useAuthHandler(
       console.log("Cleaning up auth state change listener");
       subscription.unsubscribe();
     };
-  }, [navigate, setError, isRecoveryMode]); // Added isRecoveryMode to dependencies
+  }, [navigate, setError, isRecoveryMode, toast]); 
 
   return { view, setView };
 }
