@@ -17,12 +17,14 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
   const { checkSession, error, isLoading, setError, setIsLoading } = useAuthSession();
 
   useEffect(() => {
+    let mounted = true;
+    
     const initAuth = async () => {
       try {
         const session = await checkSession();
         
         if (!session) {
-          setIsLoading(false);
+          if (mounted) setIsLoading(false);
           return;
         }
 
@@ -31,7 +33,7 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
           .from('profiles')
           .select('new_role')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error("Profile fetch error:", profileError);
@@ -39,7 +41,9 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
         }
 
         if (!profile) {
-          throw new Error("Profile not found");
+          console.log("No profile found for user");
+          if (mounted) setIsLoading(false);
+          return;
         }
 
         // Check if user's role is allowed
@@ -58,14 +62,13 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
         }
       } catch (err) {
         console.error("Authentication error:", err);
-        setError(err instanceof Error ? err.message : "Error verifying user role. Please try again.");
-        await supabase.auth.signOut();
-      } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setError(err instanceof Error ? err.message : "Error verifying user role. Please try again.");
+          await supabase.auth.signOut();
+          setIsLoading(false);
+        }
       }
     };
-
-    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
@@ -77,7 +80,13 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Initial auth check
+    initAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate, toast, expectedRole, successPath, allowedRoles]);
 
   return { error, isLoading };
