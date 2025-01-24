@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Project, castDatabaseResult, isProject } from "@/types/project";
+import { Project, Profile } from "@/types/project";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -36,7 +36,11 @@ export function useProjects() {
       const { data: projectsData, error } = await supabase
         .from('projects')
         .select(`
-          *,
+          id,
+          name,
+          status,
+          client_id,
+          budget,
           profiles!projects_client_id_fkey (
             email,
             name,
@@ -53,7 +57,7 @@ export function useProjects() {
         return [];
       }
 
-      return castDatabaseResult(projectsData, isProject);
+      return projectsData as Project[];
     }
   });
 }

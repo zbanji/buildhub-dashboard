@@ -17,6 +17,7 @@ export function useUserProfile() {
 
     const getUser = async () => {
       try {
+        // First check if we have a valid session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -25,6 +26,7 @@ export function useUserProfile() {
         }
 
         if (!session) {
+          // No session found, clean up and redirect
           await cleanupSession();
           if (mounted) {
             setUser(null);
@@ -34,6 +36,7 @@ export function useUserProfile() {
           return;
         }
 
+        // Get user data
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError) {
@@ -44,9 +47,10 @@ export function useUserProfile() {
         if (mounted && user) {
           setUser(user);
           
+          // Get profile data
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('new_role, name')
+            .select('role, name')
             .eq('id', user.id)
             .single();
 
@@ -56,12 +60,13 @@ export function useUserProfile() {
           }
 
           if (mounted) {
-            setUserRole(profile?.new_role || null);
+            setUserRole(profile?.role || null);
             setUserName(profile?.name || null);
           }
         }
       } catch (error) {
         console.error("Error in getUser:", error);
+        // Clean up and redirect on any error
         await cleanupSession();
         if (mounted) {
           setUser(null);
@@ -92,12 +97,12 @@ export function useUserProfile() {
         setUser(session.user);
         const { data: profile } = await supabase
           .from('profiles')
-          .select('new_role, name')
+          .select('role, name')
           .eq('id', session.user.id)
           .single();
         
         if (mounted) {
-          setUserRole(profile?.new_role || null);
+          setUserRole(profile?.role || null);
           setUserName(profile?.name || null);
         }
       }

@@ -8,54 +8,26 @@ import { checkUserRole } from "./auth/use-profile-role";
 interface UseAuthStateProps {
   expectedRole: 'admin' | 'client';
   successPath: string;
-  allowedRoles?: string[];
 }
 
-export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAuthStateProps) {
+export function useAuthState({ expectedRole, successPath }: UseAuthStateProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { checkSession, error, isLoading, setError, setIsLoading } = useAuthSession();
 
   useEffect(() => {
-    let mounted = true;
-    
     const initAuth = async () => {
-      if (!mounted) return;
+      const session = await checkSession();
       
+      if (!session) return;
+
       try {
-        const session = await checkSession();
+        const hasRole = await checkUserRole(session.user.id, expectedRole);
         
-        if (!session) {
-          console.log("No session found");
-          return;
-        }
-
-        console.log("Checking profile for user:", session.user.id);
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('new_role')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError) {
-          console.error("Profile fetch error:", profileError);
-          throw new Error("Failed to fetch user profile");
-        }
-
-        if (!profile) {
-          console.log("No profile found");
-          throw new Error("User profile not found");
-        }
-
-        console.log("Profile found:", profile);
-        const roleAllowed = allowedRoles 
-          ? allowedRoles.includes(profile.new_role)
-          : await checkUserRole(session.user.id, expectedRole);
-        
-        if (roleAllowed) {
+        if (hasRole) {
           toast({
             title: "Welcome back!",
-            description: `Successfully logged in as ${profile.new_role}.`,
+            description: `Successfully logged in as ${expectedRole}.`,
           });
           navigate(successPath);
         } else {
@@ -63,45 +35,26 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
         }
       } catch (err) {
         console.error("Authentication error:", err);
-        if (mounted) {
-          setError(err instanceof Error ? err.message : "Error verifying user role. Please try again.");
-          await supabase.auth.signOut();
-        }
+        setError(err instanceof Error ? err.message : "Error verifying user role. Please try again.");
+        await supabase.auth.signOut();
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
-      
-      if (!mounted) return;
+    initAuth();
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        setIsLoading(true);
-        await initAuth();
+        initAuth();
       } else if (event === 'SIGNED_OUT') {
         setError("");
-      }
-      
-      if (mounted) {
         setIsLoading(false);
       }
     });
 
-    // Initial auth check
-    if (mounted) {
-      setIsLoading(true);
-      initAuth().finally(() => {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      });
-    }
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [navigate, toast, expectedRole, successPath, allowedRoles, setError, setIsLoading]);
+    return () => subscription.unsubscribe();
+  }, [navigate, toast, expectedRole, successPath]);
 
   return { error, isLoading };
 }
