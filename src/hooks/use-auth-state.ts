@@ -8,9 +8,10 @@ import { checkUserRole } from "./auth/use-profile-role";
 interface UseAuthStateProps {
   expectedRole: 'admin' | 'client';
   successPath: string;
+  allowedRoles?: string[];
 }
 
-export function useAuthState({ expectedRole, successPath }: UseAuthStateProps) {
+export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAuthStateProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { checkSession, error, isLoading, setError, setIsLoading } = useAuthSession();
@@ -22,12 +23,23 @@ export function useAuthState({ expectedRole, successPath }: UseAuthStateProps) {
       if (!session) return;
 
       try {
-        const hasRole = await checkUserRole(session.user.id, expectedRole);
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('new_role, company_id')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        // Check if user's role is allowed
+        const roleAllowed = allowedRoles 
+          ? allowedRoles.includes(profile.new_role)
+          : await checkUserRole(session.user.id, expectedRole);
         
-        if (hasRole) {
+        if (roleAllowed) {
           toast({
             title: "Welcome back!",
-            description: `Successfully logged in as ${expectedRole}.`,
+            description: `Successfully logged in as ${profile.new_role}.`,
           });
           navigate(successPath);
         } else {
@@ -54,7 +66,7 @@ export function useAuthState({ expectedRole, successPath }: UseAuthStateProps) {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast, expectedRole, successPath]);
+  }, [navigate, toast, expectedRole, successPath, allowedRoles]);
 
   return { error, isLoading };
 }

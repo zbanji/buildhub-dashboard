@@ -5,7 +5,8 @@ import { useAuthState } from "@/hooks/use-auth-state";
 export default function ClientLogin() {
   const { error, isLoading } = useAuthState({
     expectedRole: 'client',
-    successPath: '/'
+    successPath: '/',
+    allowedRoles: ['client', 'company_admin'] // Allow both client and company_admin roles
   });
 
   if (isLoading) {
