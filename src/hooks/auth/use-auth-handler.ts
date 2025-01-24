@@ -77,19 +77,30 @@ export function useAuthHandler(
           break;
 
         case 'USER_UPDATED':
-          if (isRecoveryMode && session?.user) {
+          if (isRecoveryMode) {
             try {
-              const profile = await fetchProfile(session.user.id);
-              
-              if (profile?.password_reset_in_progress) {
-                await supabase
-                  .from('profiles')
-                  .update({ password_reset_in_progress: false })
-                  .eq('id', session.user.id);
-                
-                setPasswordUpdated(true);
-                await cleanupSession();
-                navigate('/client/login');
+              const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+              if (sessionError) {
+                const isRefreshTokenError = await handleSessionError(sessionError);
+                if (!isRefreshTokenError) {
+                  setError(sessionError.message);
+                }
+              } else if (currentSession) {
+                const profile = await fetchProfile(currentSession.user.id);
+                if (profile?.password_reset_in_progress) {
+                  await supabase
+                    .from('profiles')
+                    .update({ password_reset_in_progress: false })
+                    .eq('id', currentSession.user.id);
+                    
+                  setPasswordUpdated(true);
+                  toast({
+                    title: "Success",
+                    description: "Your password has been updated successfully. Please sign in with your new password.",
+                  });
+                  await cleanupSession();
+                  navigate('/client/login');
+                }
               }
             } catch (err) {
               console.error("Error handling password update:", err);
@@ -106,6 +117,7 @@ export function useAuthHandler(
 
           try {
             if (!session) return;
+            console.log("Fetching user profile for ID:", session.user.id);
             const profile = await fetchProfile(session.user.id);
 
             if (!profile) {
@@ -117,6 +129,7 @@ export function useAuthHandler(
               return;
             }
 
+            console.log("Profile fetched successfully:", profile);
             if (profile?.role === 'admin') {
               navigate('/admin/projects');
             } else {
@@ -145,9 +158,10 @@ export function useAuthHandler(
     });
 
     return () => {
+      console.log("Cleaning up auth state change listener");
       subscription.unsubscribe();
     };
-  }, [navigate, setError, isRecoveryMode, passwordUpdated, toast]);
+  }, [navigate, setError, isRecoveryMode, passwordUpdated, toast]); 
 
   return { view, setView };
 }

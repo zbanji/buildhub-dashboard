@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { AuthError } from "@supabase/supabase-js";
 
 export function usePasswordUpdate() {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,6 +10,7 @@ export function usePasswordUpdate() {
     setIsLoading(true);
 
     try {
+      // For password recovery flow, we don't need to verify current password
       const { data: { session } } = await supabase.auth.getSession();
       const isRecoveryMode = new URLSearchParams(window.location.search).get('type') === 'recovery';
 
@@ -33,7 +33,7 @@ export function usePasswordUpdate() {
       }
 
       // Only verify current password if not in recovery mode
-      if (!isRecoveryMode && session?.user) {
+      if (!isRecoveryMode) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user?.email) {
           throw new Error("User email not found");
@@ -54,40 +54,31 @@ export function usePasswordUpdate() {
         }
       }
 
-      // Update password
-      const { error: updateError } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (updateError) {
-        throw updateError;
-      }
-
-      // If in recovery mode, update the profile flag
-      if (isRecoveryMode && session?.user) {
-        await supabase
-          .from('profiles')
-          .update({ password_reset_in_progress: true })
-          .eq('id', session.user.id);
+      if (error) {
+        console.error("Password update error:", error);
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
       }
 
       toast({
         title: "Success",
-        description: isRecoveryMode 
-          ? "Your password has been reset successfully. Please sign in with your new password."
-          : "Your password has been updated successfully",
+        description: "Your password has been updated successfully",
       });
 
       return true;
     } catch (error) {
-      console.error("Password update error:", error);
-      const errorMessage = error instanceof AuthError 
-        ? error.message 
-        : "An unexpected error occurred. Please try again.";
-      
+      console.error("Password change error:", error);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
       return false;
