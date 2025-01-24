@@ -18,11 +18,14 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
 
   useEffect(() => {
     const initAuth = async () => {
-      const session = await checkSession();
-      
-      if (!session) return;
-
       try {
+        const session = await checkSession();
+        
+        if (!session) {
+          setIsLoading(false);
+          return;
+        }
+
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('new_role, company_id')
@@ -58,6 +61,7 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
+        setIsLoading(true);
         initAuth();
       } else if (event === 'SIGNED_OUT') {
         setError("");
