@@ -8,11 +8,34 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce',
   },
   global: {
     headers: {
       'Content-Type': 'application/json',
     },
   },
+  db: {
+    schema: 'public'
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
+  },
+  // Add retries for network issues
+  fetch: (url, options) => {
+    return fetch(url, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        ...options?.headers,
+        'Cache-Control': 'no-cache',
+      },
+    }).catch(error => {
+      console.error('Fetch error:', error);
+      throw error;
+    });
+  }
 });
