@@ -33,7 +33,7 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
           .from('profiles')
           .select('new_role')
           .eq('id', session.user.id)
-          .maybeSingle();
+          .single();
 
         if (profileError) {
           console.error("Profile fetch error:", profileError);
@@ -67,13 +67,17 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
           await supabase.auth.signOut();
           setIsLoading(false);
         }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         setIsLoading(true);
-        initAuth();
+        await initAuth();
       } else if (event === 'SIGNED_OUT') {
         setError("");
         setIsLoading(false);
@@ -87,7 +91,7 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, toast, expectedRole, successPath, allowedRoles]);
+  }, [navigate, toast, expectedRole, successPath, allowedRoles, setError, setIsLoading]);
 
   return { error, isLoading };
 }
