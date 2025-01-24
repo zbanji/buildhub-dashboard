@@ -26,13 +26,21 @@ export function useAuthState({ expectedRole, successPath, allowedRoles }: UseAut
           return;
         }
 
+        // First check if the user exists in auth.users
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('new_role, company_id')
+          .select('new_role')
           .eq('id', session.user.id)
           .single();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+          throw profileError;
+        }
+
+        if (!profile) {
+          throw new Error("Profile not found");
+        }
 
         // Check if user's role is allowed
         const roleAllowed = allowedRoles 
