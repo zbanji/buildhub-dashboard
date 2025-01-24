@@ -6,7 +6,7 @@ import { useAuthSession } from "./auth/use-auth-session";
 import { checkUserRole } from "./auth/use-profile-role";
 
 interface UseAuthStateProps {
-  expectedRole: 'admin' | 'client';
+  expectedRole: 'admin' | 'client' | 'super_admin';
   successPath: string;
 }
 
