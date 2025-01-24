@@ -65,15 +65,10 @@ export function usePasswordUpdate() {
 
       // If in recovery mode, update the profile flag
       if (isRecoveryMode && session?.user) {
-        const { error: profileError } = await supabase
+        await supabase
           .from('profiles')
           .update({ password_reset_in_progress: true })
           .eq('id', session.user.id);
-
-        if (profileError) {
-          console.error("Error updating profile:", profileError);
-          // Continue with success message even if profile update fails
-        }
       }
 
       toast({
