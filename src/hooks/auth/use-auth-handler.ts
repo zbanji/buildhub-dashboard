@@ -43,7 +43,7 @@ export function useAuthHandler(
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('role, password_reset_in_progress')
+        .select('new_role, password_reset_in_progress, company_id')
         .eq('id', userId)
         .maybeSingle();
 
@@ -117,7 +117,8 @@ export function useAuthHandler(
               return;
             }
 
-            if (profile?.role === 'admin') {
+            // Handle navigation based on new_role
+            if (profile?.new_role === 'admin' || profile?.new_role === 'super_admin' || profile?.new_role === 'company_admin') {
               navigate('/admin/projects');
             } else {
               navigate('/');

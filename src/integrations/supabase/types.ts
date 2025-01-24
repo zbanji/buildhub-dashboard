@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      companies: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -50,33 +71,47 @@ export type Database = {
       }
       profiles: {
         Row: {
+          company_id: string | null
           created_at: string | null
           email: string | null
           id: string
           name: string | null
+          new_role: Database["public"]["Enums"]["user_role"] | null
           password_reset_in_progress: boolean | null
           role: string | null
           updated_at: string | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string | null
           email?: string | null
           id: string
           name?: string | null
+          new_role?: Database["public"]["Enums"]["user_role"] | null
           password_reset_in_progress?: boolean | null
           role?: string | null
           updated_at?: string | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
           name?: string | null
+          new_role?: Database["public"]["Enums"]["user_role"] | null
           password_reset_in_progress?: boolean | null
           role?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_media: {
         Row: {
@@ -220,6 +255,7 @@ export type Database = {
     }
     Enums: {
       project_status: "planning" | "in_progress" | "review" | "completed"
+      user_role: "super_admin" | "company_admin" | "admin" | "client"
     }
     CompositeTypes: {
       [_ in never]: never
