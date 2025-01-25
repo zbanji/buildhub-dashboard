@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import AdminProjects from "./pages/admin/Projects";
 import AdminLogin from "./pages/auth/AdminLogin";
 import ClientLogin from "./pages/auth/ClientLogin";
+import SuperAdminLogin from "./pages/auth/SuperAdminLogin";
+import SuperAdminDashboard from "./pages/super-admin/Dashboard";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -28,8 +30,17 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/super-admin/dashboard"
+              element={
+                <ProtectedRoute allowedRole="super_admin">
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/client/login" element={<ClientLogin />} />
+            <Route path="/super-admin/login" element={<SuperAdminLogin />} />
           </Routes>
         </TooltipProvider>
       </BrowserRouter>

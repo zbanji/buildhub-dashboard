@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export function useAuthCheck(expectedRole: "admin" | "client") {
+export function useAuthCheck(expectedRole: "admin" | "client" | "super_admin") {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -18,7 +18,7 @@ export function useAuthCheck(expectedRole: "admin" | "client") {
 
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('role')
+          .select('new_role')
           .eq('id', session.user.id)
           .maybeSingle();
 
@@ -30,7 +30,7 @@ export function useAuthCheck(expectedRole: "admin" | "client") {
           return;
         }
 
-        setIsAuthorized(profile.role === expectedRole);
+        setIsAuthorized(profile.new_role === expectedRole);
       } catch (error) {
         console.error("Auth check error:", error);
         setIsAuthorized(false);
