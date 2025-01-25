@@ -9,6 +9,9 @@ interface AuthUIProps {
 }
 
 export function AuthUI({ view, redirectUrl, showLinks = true }: AuthUIProps) {
+  console.log("Current view:", view);
+  console.log("Redirect URL:", redirectUrl);
+
   return (
     <Auth
       supabaseClient={supabase}
