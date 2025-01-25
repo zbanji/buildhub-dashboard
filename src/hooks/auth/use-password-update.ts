@@ -1,19 +1,35 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AuthError } from "@supabase/supabase-js";
 
 export function usePasswordUpdate() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  const handleAuthError = (error: AuthError) => {
+    console.error("Auth error:", error);
+    let errorMessage = "An error occurred while changing your password.";
+    
+    if (error.message.includes("invalid_credentials")) {
+      errorMessage = "Current password is incorrect. Please check and try again.";
+    } else if (error.message.includes("Failed to fetch")) {
+      errorMessage = "Network error. Please check your connection and try again.";
+    } else if (error.message.includes("same_password")) {
+      errorMessage = "New password must be different from your current password.";
+    }
+    
+    toast({
+      title: "Error",
+      description: errorMessage,
+      variant: "destructive",
+    });
+  };
+
   const updatePassword = async (currentPassword: string, newPassword: string, confirmPassword: string) => {
     setIsLoading(true);
 
     try {
-      // For password recovery flow, we don't need to verify current password
-      const { data: { session } } = await supabase.auth.getSession();
-      const isRecoveryMode = new URLSearchParams(window.location.search).get('type') === 'recovery';
-
       if (newPassword.length < 6) {
         toast({
           title: "Error",
@@ -32,39 +48,19 @@ export function usePasswordUpdate() {
         return false;
       }
 
-      // Only verify current password if not in recovery mode
-      if (!isRecoveryMode) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.email) {
-          throw new Error("User email not found");
-        }
-
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: user.email,
-          password: currentPassword,
-        });
-
-        if (signInError) {
-          toast({
-            title: "Error",
-            description: "Current password is incorrect",
-            variant: "destructive",
-          });
-          return false;
-        }
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("No active session");
       }
 
+      // Update password directly
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (error) {
-        console.error("Password update error:", error);
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
+        handleAuthError(error);
         return false;
       }
 
