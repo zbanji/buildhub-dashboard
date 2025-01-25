@@ -9,6 +9,9 @@ interface AuthUIProps {
 }
 
 export function AuthUI({ view, redirectUrl, showLinks = true }: AuthUIProps) {
+  console.log("AuthUI rendered with view:", view);
+  console.log("Redirect URL:", redirectUrl);
+  
   return (
     <Auth
       supabaseClient={supabase}
@@ -84,6 +87,11 @@ export function AuthUI({ view, redirectUrl, showLinks = true }: AuthUIProps) {
             confirmation_text: 'Your password has been updated successfully',
           },
         },
+      }}
+      onError={(error) => {
+        console.error("Auth error:", error);
+        console.log("Current view:", view);
+        console.log("Current URL:", window.location.href);
       }}
       queryParams={{
         password_reset_redirect_to: redirectUrl,
