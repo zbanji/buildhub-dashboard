@@ -23,41 +23,10 @@ export function useAuthHandler(
     if (type === "recovery") {
       setIsRecoveryMode(true);
       setView("update_password");
+      // Ensure we clean up any existing session when entering recovery mode
       cleanupSession();
     }
   }, []);
-
-  const handleSessionError = async (error: any) => {
-    console.error("Session error:", error);
-    if (error.message.includes('refresh_token_not_found')) {
-      console.log("Invalid refresh token detected, cleaning up session");
-      await cleanupSession();
-      setError("Your session has expired. Please sign in again.");
-      setView("sign_in");
-      return true;
-    }
-    return false;
-  };
-
-  const fetchProfile = async (userId: string, retryCount = 3): Promise<any> => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role, password_reset_in_progress')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!profile && retryCount > 0) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return fetchProfile(userId, retryCount - 1);
-      }
-      return profile;
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      throw error;
-    }
-  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -68,6 +37,7 @@ export function useAuthHandler(
           console.log("Password recovery mode detected");
           setIsRecoveryMode(true);
           setView("update_password");
+          await cleanupSession(); // Clean up session on password recovery
           if (session?.user.id) {
             await supabase
               .from('profiles')
@@ -79,28 +49,20 @@ export function useAuthHandler(
         case 'USER_UPDATED':
           if (isRecoveryMode) {
             try {
-              const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-              if (sessionError) {
-                const isRefreshTokenError = await handleSessionError(sessionError);
-                if (!isRefreshTokenError) {
-                  setError(sessionError.message);
-                }
-              } else if (currentSession) {
-                const profile = await fetchProfile(currentSession.user.id);
-                if (profile?.password_reset_in_progress) {
-                  await supabase
-                    .from('profiles')
-                    .update({ password_reset_in_progress: false })
-                    .eq('id', currentSession.user.id);
-                    
-                  setPasswordUpdated(true);
-                  toast({
-                    title: "Success",
-                    description: "Your password has been updated successfully. Please sign in with your new password.",
-                  });
-                  await cleanupSession();
-                  navigate('/client/login');
-                }
+              const { data: { session: currentSession } } = await supabase.auth.getSession();
+              if (currentSession?.user.id) {
+                await supabase
+                  .from('profiles')
+                  .update({ password_reset_in_progress: false })
+                  .eq('id', currentSession.user.id);
+                
+                setPasswordUpdated(true);
+                toast({
+                  title: "Success",
+                  description: "Your password has been updated successfully. Please sign in with your new password.",
+                });
+                await cleanupSession();
+                navigate('/client/login');
               }
             } catch (err) {
               console.error("Error handling password update:", err);
@@ -117,8 +79,11 @@ export function useAuthHandler(
 
           try {
             if (!session) return;
-            console.log("Fetching user profile for ID:", session.user.id);
-            const profile = await fetchProfile(session.user.id);
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role, password_reset_in_progress')
+              .eq('id', session.user.id)
+              .single();
 
             if (!profile) {
               throw new Error("Profile not found");
@@ -129,8 +94,7 @@ export function useAuthHandler(
               return;
             }
 
-            console.log("Profile fetched successfully:", profile);
-            if (profile?.role === 'admin') {
+            if (profile.role === 'admin') {
               navigate('/admin/projects');
             } else {
               navigate('/');
@@ -143,16 +107,11 @@ export function useAuthHandler(
           break;
 
         case 'SIGNED_OUT':
-          try {
-            await cleanupSession();
-          } catch (err) {
-            console.error("Error during cleanup:", err);
-          } finally {
-            setError("");
-            setView("sign_in");
-            setPasswordUpdated(false);
-            setIsRecoveryMode(false);
-          }
+          await cleanupSession();
+          setError("");
+          setView("sign_in");
+          setPasswordUpdated(false);
+          setIsRecoveryMode(false);
           break;
       }
     });
@@ -161,7 +120,7 @@ export function useAuthHandler(
       console.log("Cleaning up auth state change listener");
       subscription.unsubscribe();
     };
-  }, [navigate, setError, isRecoveryMode, passwordUpdated, toast]); 
+  }, [navigate, setError, isRecoveryMode, passwordUpdated, toast]);
 
   return { view, setView };
 }
