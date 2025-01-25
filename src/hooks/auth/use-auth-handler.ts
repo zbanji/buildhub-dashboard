@@ -20,12 +20,23 @@ export function useAuthHandler(
     const params = new URLSearchParams(window.location.search);
     const type = params.get("type");
     
-    if (type === "recovery") {
-      setIsRecoveryMode(true);
-      setView("update_password");
-      // Ensure we clean up any existing session when entering recovery mode
-      cleanupSession();
-    }
+    const initializeAuthState = async () => {
+      if (type === "recovery") {
+        console.log("Initializing recovery mode");
+        await cleanupSession();
+        setIsRecoveryMode(true);
+        setView("update_password");
+      } else {
+        // Check if we have an existing session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.log("No existing session found");
+          setView("sign_in");
+        }
+      }
+    };
+
+    initializeAuthState();
   }, []);
 
   useEffect(() => {
@@ -37,7 +48,7 @@ export function useAuthHandler(
           console.log("Password recovery mode detected");
           setIsRecoveryMode(true);
           setView("update_password");
-          await cleanupSession(); // Clean up session on password recovery
+          await cleanupSession();
           if (session?.user.id) {
             await supabase
               .from('profiles')
@@ -78,12 +89,21 @@ export function useAuthHandler(
           }
 
           try {
-            if (!session) return;
-            const { data: profile } = await supabase
+            if (!session) {
+              console.log("No session available after sign in");
+              return;
+            }
+
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('role, password_reset_in_progress')
               .eq('id', session.user.id)
               .single();
+
+            if (profileError) {
+              console.error("Profile fetch error:", profileError);
+              throw profileError;
+            }
 
             if (!profile) {
               throw new Error("Profile not found");
@@ -93,6 +113,9 @@ export function useAuthHandler(
               console.log("Password reset in progress, preventing navigation");
               return;
             }
+
+            // Clear any existing errors
+            setError("");
 
             if (profile.role === 'admin') {
               navigate('/admin/projects');
@@ -107,6 +130,7 @@ export function useAuthHandler(
           break;
 
         case 'SIGNED_OUT':
+          console.log("User signed out, cleaning up session");
           await cleanupSession();
           setError("");
           setView("sign_in");
