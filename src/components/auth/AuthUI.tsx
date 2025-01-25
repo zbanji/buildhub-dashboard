@@ -88,11 +88,6 @@ export function AuthUI({ view, redirectUrl, showLinks = true }: AuthUIProps) {
           },
         },
       }}
-      onError={(error) => {
-        console.error("Auth error:", error);
-        console.log("Current view:", view);
-        console.log("Current URL:", window.location.href);
-      }}
       queryParams={{
         password_reset_redirect_to: redirectUrl,
       }}
